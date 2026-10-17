@@ -48,6 +48,24 @@ export async function buscarProyectos(
   }
 }
 
+// Convierte los datos del formulario a los campos de crear_proyecto (sin el prefijo p_).
+function aCamposProyecto(datos) {
+  return {
+    titulo: datos.titulo.trim(),
+    cliente: datos.cliente.trim(),
+    pais_id: Number(datos.paisId),
+    estado: datos.estado,
+    etiquetas: datos.etiquetas,
+    fecha_inicio: datos.fechaInicio || null,
+    fecha_fin: datos.fechaFin || null,
+    descripcion: datos.descripcion.trim() || null,
+    resultados: datos.resultados.trim() || null,
+    contacto_referencia: datos.contactoReferencia.trim() || null,
+    monto: datos.monto === '' ? null : Number(datos.monto),
+    moneda: datos.moneda,
+  }
+}
+
 // Crea el proyecto con sus etiquetas, monto y evidencias.
 // Proyecto, etiquetas y monto se guardan en una sola transacción (función crear_proyecto).
 // Las evidencias se suben después, porque el almacenamiento exige que el proyecto exista;
@@ -55,21 +73,12 @@ export async function buscarProyectos(
 // La autoría (creado_por, subido_por) la pone la base de datos con el usuario de la sesión.
 export async function crearProyecto(datos, evidencias, onProgreso = () => {}) {
   onProgreso('Guardando proyecto…')
+  const campos = aCamposProyecto(datos)
   const id = unwrap(
-    await supabase.rpc('crear_proyecto', {
-      p_titulo: datos.titulo.trim(),
-      p_cliente: datos.cliente.trim(),
-      p_pais_id: datos.paisId,
-      p_estado: datos.estado,
-      p_etiquetas: datos.etiquetas,
-      p_fecha_inicio: datos.fechaInicio || null,
-      p_fecha_fin: datos.fechaFin || null,
-      p_descripcion: datos.descripcion.trim() || null,
-      p_resultados: datos.resultados.trim() || null,
-      p_contacto_referencia: datos.contactoReferencia.trim() || null,
-      p_monto: datos.monto === '' ? null : Number(datos.monto),
-      p_moneda: datos.moneda,
-    }),
+    await supabase.rpc(
+      'crear_proyecto',
+      Object.fromEntries(Object.entries(campos).map(([k, v]) => [`p_${k}`, v])),
+    ),
   )
 
   const rutasSubidas = []
@@ -88,4 +97,16 @@ export async function crearProyecto(datos, evidencias, onProgreso = () => {}) {
   }
 
   return id
+}
+
+// Importación masiva: todos los proyectos en una sola transacción (función crear_proyectos).
+// Si uno falla no se guarda ninguno, y el error indica la fila del Excel ("Fila 7: …").
+// filas: [{ fila, datos }] con `datos` en la forma del formulario.
+export async function crearProyectos(filas) {
+  const ids = unwrap(
+    await supabase.rpc('crear_proyectos', {
+      p_proyectos: filas.map(({ fila, datos }) => ({ fila, ...aCamposProyecto(datos) })),
+    }),
+  )
+  return ids.length
 }

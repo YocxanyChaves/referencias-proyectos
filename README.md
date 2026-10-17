@@ -24,12 +24,14 @@ db/
     001_esquema.sql
     002_datos_iniciales.sql
     003_crear_proyecto.sql           proyecto + etiquetas + monto en una transacción
+    004_crear_proyectos.sql          importación masiva: todos o ninguno
   supabase/                Adaptador específico de Supabase
     100_auth_y_permisos.sql
     101_funciones_privadas.sql
     102_descargas_por_servidor.sql
     103_evidencias_internas_por_pais.sql
     104_autoria_y_crear_proyecto.sql  creado_por / subido_por los fija la base de datos
+    105_crear_proyectos.sql
     functions/             Edge Functions (Deno)
       descargar-evidencia/          valida permiso, registra en descargas y entrega URL firmada (60 s)
       eliminar-archivos-evidencia/  borra archivos del almacenamiento (admin o editor del país)
@@ -67,5 +69,9 @@ cp .env.example .env    # completar URL y publishable key del proyecto
 npm install
 npm run dev
 ```
+
+### Carga desde Excel
+
+En **Nuevo proyecto** hay un panel para arrastrar un `.xlsx` y un botón para descargar la plantilla (con listas desplegables de país, estado y etiquetas). Un archivo con un proyecto llena el formulario; con varios, se muestra una revisión por fila y se importan todos en una sola transacción. La lógica está en `src/lib/excelProyectos.js`.
 
 Fase 1: inicio de sesión, listado y búsqueda de proyectos (por etiquetas, país, texto y fecha de fin) y creación de proyectos con etiquetas, monto y evidencias.

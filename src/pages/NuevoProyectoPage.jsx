@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import ImportacionMasiva from '../components/ImportacionMasiva'
 import SelectorEtiquetas from '../components/SelectorEtiquetas'
+import ZonaExcel from '../components/ZonaExcel'
 import { useAuth } from '../context/AuthContext'
+import { descargarArchivo, generarPlantilla, leerExcel } from '../lib/excelProyectos'
 import {
   ESTADOS_PROYECTO,
   TIPOS_EVIDENCIA,
@@ -43,6 +46,10 @@ export default function NuevoProyectoPage() {
   const [evidencias, setEvidencias] = useState([])
   const [progreso, setProgreso] = useState(null)
   const [error, setError] = useState(null)
+  const [leyendoExcel, setLeyendoExcel] = useState(false)
+  const [estadoExcel, setEstadoExcel] = useState(null) // { error, aviso, pendientes }
+  const [importacion, setImportacion] = useState(null) // { nombreArchivo, filas, advertencias }
+  const paisFijo = esAdmin ? null : perfil.paisId
 
   useEffect(() => {
     Promise.all([listarEtiquetas(), listarPaises()])
@@ -57,6 +64,45 @@ export default function NuevoProyectoPage() {
     value: datos[nombre],
     onChange: (e) => setDatos((d) => ({ ...d, [nombre]: e.target.value })),
   })
+
+  async function cargarExcel(archivo) {
+    setLeyendoExcel(true)
+    setEstadoExcel(null)
+    try {
+      const { filas, advertencias } = await leerExcel(archivo, { paises, etiquetas, paisFijo })
+      if (filas.length === 0) {
+        setImportacion(null)
+        setEstadoExcel({
+          error: 'El archivo no tiene proyectos. Llena al menos una fila debajo de los encabezados.',
+        })
+      } else if (filas.length === 1) {
+        // Un solo proyecto: se llena el formulario para revisarlo y adjuntar evidencias.
+        const [fila] = filas
+        setImportacion(null)
+        setDatos({ ...fila.datos, paisId: esAdmin ? String(fila.datos.paisId) : perfil.paisId })
+        setEstadoExcel({
+          aviso: `Datos cargados desde ${archivo.name}. Revísalos y adjunta las evidencias.`,
+          pendientes: fila.errores,
+        })
+      } else {
+        setImportacion({ nombreArchivo: archivo.name, filas, advertencias })
+      }
+    } catch (e) {
+      setImportacion(null)
+      setEstadoExcel({ error: e.message })
+    } finally {
+      setLeyendoExcel(false)
+    }
+  }
+
+  async function bajarPlantilla() {
+    try {
+      const blob = await generarPlantilla({ paises, etiquetas, paisFijo })
+      descargarArchivo(blob, 'plantilla-proyectos.xlsx')
+    } catch (e) {
+      setEstadoExcel({ error: `No se pudo generar la plantilla: ${e.message}` })
+    }
+  }
 
   function agregarArchivos(e) {
     const nuevos = [...e.target.files].map((archivo) => ({
@@ -113,163 +159,185 @@ export default function NuevoProyectoPage() {
 
   const guardando = progreso !== null
 
+  if (importacion) {
+    return (
+      <ImportacionMasiva
+        {...importacion}
+        onCancelar={() => setImportacion(null)}
+        onCargarOtro={cargarExcel}
+      />
+    )
+  }
+
   return (
-    <form className="formulario" onSubmit={enviar}>
-      <h1>Nuevo proyecto</h1>
+    <div className="nuevo-proyecto">
+      <form className="formulario" onSubmit={enviar}>
+        <h1>Nuevo proyecto</h1>
 
-      <section className="tarjeta">
-        <h2>Datos generales</h2>
-        <label>
-          Título *
-          <input {...campo('titulo')} required maxLength={300} />
-        </label>
-        <label>
-          Cliente *
-          <input {...campo('cliente')} required maxLength={300} />
-        </label>
-        <div className="fila">
+        <section className="tarjeta">
+          <h2>Datos generales</h2>
           <label>
-            País *
-            {esAdmin ? (
-              <select {...campo('paisId')} required>
-                <option value="">Seleccionar…</option>
-                {paises.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nombre}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input value={perfil.paisNombre ?? ''} disabled />
-            )}
+            Título *
+            <input {...campo('titulo')} required maxLength={300} />
           </label>
           <label>
-            Estado
-            <select {...campo('estado')}>
-              {ESTADOS_PROYECTO.map((e) => (
-                <option key={e.valor} value={e.valor}>
-                  {e.nombre}
-                </option>
-              ))}
-            </select>
+            Cliente *
+            <input {...campo('cliente')} required maxLength={300} />
           </label>
-        </div>
-        <div className="fila">
-          <label>
-            Fecha de inicio
-            <input type="date" {...campo('fechaInicio')} />
-          </label>
-          <label>
-            Fecha de fin{datos.estado === 'finalizado' && ' *'}
-            <input type="date" {...campo('fechaFin')} min={datos.fechaInicio || undefined} />
-          </label>
-        </div>
-        <label>
-          Descripción
-          <textarea {...campo('descripcion')} rows={4} />
-        </label>
-        <label>
-          Resultados
-          <textarea {...campo('resultados')} rows={3} />
-        </label>
-        <label>
-          Contacto de referencia
-          <input {...campo('contactoReferencia')} placeholder="Nombre, cargo, correo o teléfono" />
-        </label>
-      </section>
-
-      <section className="tarjeta">
-        <h2>Etiquetas *</h2>
-        <SelectorEtiquetas
-          etiquetas={etiquetas}
-          seleccionadas={datos.etiquetas}
-          onChange={(v) => setDatos((d) => ({ ...d, etiquetas: v }))}
-        />
-      </section>
-
-      <section className="tarjeta">
-        <h2>Monto</h2>
-        <p className="ayuda">Uso interno: no se muestra al rol consulta ni se incluye en exportaciones.</p>
-        <div className="fila">
-          <label>
-            Monto
-            <input type="number" min="0" step="0.01" {...campo('monto')} />
-          </label>
-          <label>
-            Moneda
-            <input
-              {...campo('moneda')}
-              onChange={(e) => setDatos((d) => ({ ...d, moneda: e.target.value.toUpperCase() }))}
-              maxLength={3}
-              pattern="[A-Z]{3}"
-              title="Código ISO de 3 letras, p. ej. USD"
-            />
-          </label>
-        </div>
-      </section>
-
-      <section className="tarjeta">
-        <h2>Evidencias</h2>
-        <p className="ayuda">
-          Máximo 50 MB por archivo. Desmarca “Compartible” para documentos de uso interno (p. ej. contratos
-          con precios): no serán visibles para el rol consulta ni se exportarán.
-        </p>
-        <input type="file" multiple onChange={agregarArchivos} />
-
-        {evidencias.length > 0 && (
-          <ul className="evidencias">
-            {evidencias.map((ev) => (
-              <li key={ev.clave}>
-                <div className="evidencia-archivo">
-                  <strong>{ev.archivo.name}</strong>
-                  <span className={ev.archivo.size > TAMANO_MAXIMO_BYTES ? 'error' : 'meta'}>
-                    {formatearTamano(ev.archivo.size)}
-                  </span>
-                </div>
-                <select value={ev.tipo} onChange={(e) => cambiarEvidencia(ev.clave, { tipo: e.target.value })}>
-                  {TIPOS_EVIDENCIA.map((t) => (
-                    <option key={t.valor} value={t.valor}>
-                      {t.nombre}
+          <div className="fila">
+            <label>
+              País *
+              {esAdmin ? (
+                <select {...campo('paisId')} required>
+                  <option value="">Seleccionar…</option>
+                  {paises.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.nombre}
                     </option>
                   ))}
                 </select>
-                <input
-                  placeholder="Descripción (opcional)"
-                  value={ev.descripcion}
-                  onChange={(e) => cambiarEvidencia(ev.clave, { descripcion: e.target.value })}
-                />
-                <label className="check">
+              ) : (
+                <input value={perfil.paisNombre ?? ''} disabled />
+              )}
+            </label>
+            <label>
+              Estado
+              <select {...campo('estado')}>
+                {ESTADOS_PROYECTO.map((e) => (
+                  <option key={e.valor} value={e.valor}>
+                    {e.nombre}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="fila">
+            <label>
+              Fecha de inicio
+              <input type="date" {...campo('fechaInicio')} />
+            </label>
+            <label>
+              Fecha de fin{datos.estado === 'finalizado' && ' *'}
+              <input type="date" {...campo('fechaFin')} min={datos.fechaInicio || undefined} />
+            </label>
+          </div>
+          <label>
+            Descripción
+            <textarea {...campo('descripcion')} rows={4} />
+          </label>
+          <label>
+            Resultados
+            <textarea {...campo('resultados')} rows={3} />
+          </label>
+          <label>
+            Contacto de referencia
+            <input {...campo('contactoReferencia')} placeholder="Nombre, cargo, correo o teléfono" />
+          </label>
+        </section>
+
+        <section className="tarjeta">
+          <h2>Etiquetas *</h2>
+          <SelectorEtiquetas
+            etiquetas={etiquetas}
+            seleccionadas={datos.etiquetas}
+            onChange={(v) => setDatos((d) => ({ ...d, etiquetas: v }))}
+          />
+        </section>
+
+        <section className="tarjeta">
+          <h2>Monto</h2>
+          <p className="ayuda">Uso interno: no se muestra al rol consulta ni se incluye en exportaciones.</p>
+          <div className="fila">
+            <label>
+              Monto
+              <input type="number" min="0" step="0.01" {...campo('monto')} />
+            </label>
+            <label>
+              Moneda
+              <input
+                {...campo('moneda')}
+                onChange={(e) => setDatos((d) => ({ ...d, moneda: e.target.value.toUpperCase() }))}
+                maxLength={3}
+                pattern="[A-Z]{3}"
+                title="Código ISO de 3 letras, p. ej. USD"
+              />
+            </label>
+          </div>
+        </section>
+
+        <section className="tarjeta">
+          <h2>Evidencias</h2>
+          <p className="ayuda">
+            Máximo 50 MB por archivo. Desmarca “Compartible” para documentos de uso interno (p. ej. contratos
+            con precios): no serán visibles para el rol consulta ni se exportarán.
+          </p>
+          <input type="file" multiple onChange={agregarArchivos} />
+
+          {evidencias.length > 0 && (
+            <ul className="evidencias">
+              {evidencias.map((ev) => (
+                <li key={ev.clave}>
+                  <div className="evidencia-archivo">
+                    <strong>{ev.archivo.name}</strong>
+                    <span className={ev.archivo.size > TAMANO_MAXIMO_BYTES ? 'error' : 'meta'}>
+                      {formatearTamano(ev.archivo.size)}
+                    </span>
+                  </div>
+                  <select
+                    value={ev.tipo}
+                    onChange={(e) => cambiarEvidencia(ev.clave, { tipo: e.target.value })}
+                  >
+                    {TIPOS_EVIDENCIA.map((t) => (
+                      <option key={t.valor} value={t.valor}>
+                        {t.nombre}
+                      </option>
+                    ))}
+                  </select>
                   <input
-                    type="checkbox"
-                    checked={ev.compartible}
-                    onChange={(e) => cambiarEvidencia(ev.clave, { compartible: e.target.checked })}
+                    placeholder="Descripción (opcional)"
+                    value={ev.descripcion}
+                    onChange={(e) => cambiarEvidencia(ev.clave, { descripcion: e.target.value })}
                   />
-                  Compartible
-                </label>
-                <button
-                  type="button"
-                  className="secundario"
-                  onClick={() => setEvidencias((x) => x.filter((y) => y.clave !== ev.clave))}
-                >
-                  Quitar
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                  <label className="check">
+                    <input
+                      type="checkbox"
+                      checked={ev.compartible}
+                      onChange={(e) => cambiarEvidencia(ev.clave, { compartible: e.target.checked })}
+                    />
+                    Compartible
+                  </label>
+                  <button
+                    type="button"
+                    className="secundario"
+                    onClick={() => setEvidencias((x) => x.filter((y) => y.clave !== ev.clave))}
+                  >
+                    Quitar
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
-      {error && <p className="error">{error}</p>}
-      {progreso && <p className="progreso">{progreso}</p>}
+        {error && <p className="error">{error}</p>}
+        {progreso && <p className="progreso">{progreso}</p>}
 
-      <div className="acciones">
-        <button type="button" className="secundario" onClick={() => navigate('/')} disabled={guardando}>
-          Cancelar
-        </button>
-        <button type="submit" disabled={guardando}>
-          {guardando ? 'Guardando…' : 'Crear proyecto'}
-        </button>
-      </div>
-    </form>
+        <div className="acciones">
+          <button type="button" className="secundario" onClick={() => navigate('/')} disabled={guardando}>
+            Cancelar
+          </button>
+          <button type="submit" disabled={guardando}>
+            {guardando ? 'Guardando…' : 'Crear proyecto'}
+          </button>
+        </div>
+      </form>
+      <ZonaExcel
+        onArchivo={cargarExcel}
+        onDescargarPlantilla={bajarPlantilla}
+        ocupado={leyendoExcel || guardando || etiquetas.length === 0}
+        leyendo={leyendoExcel}
+        estado={estadoExcel}
+      />
+    </div>
   )
 }

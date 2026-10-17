@@ -98,6 +98,52 @@ button.chip { cursor: pointer; }
 .progreso { color: var(--primario); }
 .acciones { display: flex; justify-content: flex-end; gap: .75rem; }
 
+/* Nuevo proyecto: formulario + panel de Excel a la derecha */
+.nuevo-proyecto { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 1.5rem; align-items: start; max-width: 1160px; margin: 0 auto; }
+.nuevo-proyecto .formulario { max-width: none; margin: 0; }
+.zona-excel { position: sticky; top: 1rem; display: flex; flex-direction: column; gap: .75rem; margin-top: 2.6rem; }
+.zona-excel h2 { margin: 0; }
+.zona-excel .ayuda { margin: 0; }
+.zona-excel > button { width: 100%; }
+.soltar {
+  display: flex; flex-direction: column; align-items: center; gap: .3rem; text-align: center;
+  padding: 1.5rem 1rem; border: 2px dashed var(--primario); border-radius: 10px;
+  background: var(--primario-claro); color: var(--primario); cursor: pointer;
+  transition: background .15s, border-style .15s, transform .15s;
+}
+.soltar strong { font-size: 1.05rem; }
+.soltar span { font-size: .9rem; }
+.soltar:hover, .soltar:focus-visible { background: #d6e5f7; outline: none; }
+.soltar:focus-visible { box-shadow: 0 0 0 3px var(--primario); }
+.soltar.encima { border-style: solid; background: #cfe0f5; transform: scale(1.02); }
+.soltar.ocupado { cursor: progress; opacity: .7; }
+.pendientes { background: #fff4e5; color: #7a4a00; border-radius: 6px; padding: .6rem .9rem; font-size: .88rem; }
+.pendientes p { margin: 0 0 .25rem; font-weight: 600; }
+.pendientes ul { margin: 0; padding-left: 1.1rem; }
+
+/* Revisión de importación masiva */
+.importacion { display: flex; flex-direction: column; gap: 1rem; }
+.importacion h1 { margin: 0; }
+.importacion-cabecera { display: flex; justify-content: space-between; align-items: end; gap: 1rem; flex-wrap: wrap; }
+.resumen { display: flex; gap: .5rem; }
+.chip.ok { background: #e8f5ee; border-color: var(--exito); color: var(--exito); }
+.chip.mal { background: #fdecea; border-color: var(--error); color: var(--error); }
+.advertencia { color: #7a4a00; background: #fff4e5; padding: .5rem .8rem; border-radius: 6px; margin: 0; }
+.tabla-contenedor { overflow-x: auto; background: var(--superficie); border: 1px solid var(--borde); border-radius: 8px; }
+.tabla { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.tabla th { text-align: left; font-weight: 600; color: var(--suave); background: var(--fondo); position: sticky; top: 0; }
+.tabla th, .tabla td { padding: .5rem .7rem; border-bottom: 1px solid var(--borde); vertical-align: top; }
+.tabla td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tabla tr.con-error td { background: #fdf3f2; }
+.tabla tr.con-error td:first-child { box-shadow: inset 3px 0 0 var(--error); }
+.errores { margin: 0; padding-left: 1rem; color: var(--error); }
+.ok-texto { color: var(--exito); font-weight: 500; }
+
+@media (max-width: 960px) {
+  .nuevo-proyecto { grid-template-columns: 1fr; }
+  .zona-excel { position: static; order: -1; margin-top: 0; }
+}
+
 @media (max-width: 800px) {
   .proyectos { grid-template-columns: 1fr; }
   .filtros { position: static; }

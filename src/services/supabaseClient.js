@@ -20,7 +20,9 @@ export const supabase = createClient(url, key)
 export function unwrap({ data, error }) {
   if (error) {
     const sinPermiso = error.code === '42501' || /row-level security|row level security/i.test(error.message)
-    throw new Error(sinPermiso ? 'No tienes permiso para realizar esta acción.' : error.message)
+    if (!sinPermiso) throw new Error(error.message)
+    const fila = /^Fila \d+: /.exec(error.message)?.[0] ?? '' // importación masiva
+    throw new Error(`${fila}No tienes permiso para realizar esta acción.`)
   }
   return data
 }
