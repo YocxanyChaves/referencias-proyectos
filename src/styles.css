@@ -319,3 +319,22 @@ button.enlace.en-linea { display: inline; padding: 0; margin: 0; font-size: inhe
   .lista-descargas li { grid-template-columns: auto minmax(0, 1fr); }
   .lista-descargas li .chip, .lista-descargas li button { grid-column: 2; justify-self: start; }
 }
+
+/* Edición */
+.detalle-acciones { display: flex; align-items: center; gap: .75rem; margin-top: 1.6rem; }
+.detalle-acciones .estado { margin-top: 0; }
+.boton { display: inline-block; padding: .5rem 1rem; border-radius: 6px; border: 1px solid var(--primario); text-decoration: none; font-size: .95rem; }
+.boton.secundario { background: var(--superficie); color: var(--primario); }
+.boton:hover { background: var(--primario-claro); }
+.formulario.editar .volver { margin-bottom: -.5rem; }
+.evidencias li.por-quitar { background: #fdf3f2; border-color: #f0b8b2; }
+.evidencias li.por-quitar strong { text-decoration: line-through; color: var(--suave); }
+.acciones-evidencia { display: flex; align-items: center; gap: .4rem; }
+.acciones-evidencia .enlace { margin: 0; }
+.subtitulo-evidencias { margin: 1.2rem 0 .5rem; font-size: .95rem; }
+.evidencias li { grid-template-columns: minmax(0, 1.4fr) 170px minmax(0, 1fr) auto auto; }
+button.peligro { background: var(--error); border-color: var(--error); color: #fff; }
+.zona-peligro { border-color: #f0b8b2; margin-top: 1rem; }
+.zona-peligro p { margin: 0 0 .75rem; }
+.confirmar-borrado { display: flex; flex-direction: column; gap: .5rem; }
+.confirmar-borrado label { max-width: 280px; }

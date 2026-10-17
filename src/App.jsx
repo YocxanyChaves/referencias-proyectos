@@ -3,6 +3,7 @@ import Layout from './components/Layout'
 import RutaProtegida from './components/RutaProtegida'
 import { AuthProvider } from './context/AuthContext'
 import CrearContrasenaPage from './pages/CrearContrasenaPage'
+import EditarProyectoPage from './pages/EditarProyectoPage'
 import LoginPage from './pages/LoginPage'
 import NuevoProyectoPage from './pages/NuevoProyectoPage'
 import ProyectoDetallePage from './pages/ProyectoDetallePage'
@@ -21,6 +22,7 @@ export default function App() {
               <Route path="/proyectos/:id" element={<ProyectoDetallePage />} />
               <Route element={<RutaProtegida requiereCrear />}>
                 <Route path="/proyectos/nuevo" element={<NuevoProyectoPage />} />
+                <Route path="/proyectos/:id/editar" element={<EditarProyectoPage />} />
               </Route>
             </Route>
           </Route>

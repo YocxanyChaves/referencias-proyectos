@@ -1,4 +1,4 @@
-import { supabase, unwrap } from './supabaseClient'
+import { invocar, supabase, unwrap } from './supabaseClient'
 
 const BUCKET = 'evidencias'
 export const TAMANO_MAXIMO_BYTES = 50 * 1024 * 1024 // igual al límite del bucket
@@ -8,7 +8,12 @@ export const TAMANO_MAXIMO_BYTES = 50 * 1024 * 1024 // igual al límite del buck
 function construirRuta(proyectoId, archivo) {
   const punto = archivo.name.lastIndexOf('.')
   const extension =
-    punto > 0 ? archivo.name.slice(punto).toLowerCase().replace(/[^.a-z0-9]/g, '') : ''
+    punto > 0
+      ? archivo.name
+          .slice(punto)
+          .toLowerCase()
+          .replace(/[^.a-z0-9]/g, '')
+      : ''
   return `${proyectoId}/${crypto.randomUUID()}${extension}`
 }
 
@@ -48,14 +53,25 @@ export async function subirEvidencia(proyectoId, { archivo, tipo, descripcion, c
   }
 }
 
-// Llama a una Edge Function y devuelve su respuesta, o lanza el mensaje de error que envió.
-async function invocar(funcion, cuerpo) {
-  const { data, error } = await supabase.functions.invoke(funcion, { body: cuerpo })
-  if (error) {
-    const detalle = await error.context?.json?.().catch(() => null)
-    throw new Error(detalle?.error ?? error.message)
-  }
-  return data
+// Cambia el tipo, la descripción o si es compartible.
+export async function actualizarEvidencia(id, { tipo, descripcion, compartible }) {
+  unwrap(
+    await supabase
+      .from('evidencias')
+      .update({ tipo, descripcion: descripcion?.trim() || null, compartible })
+      .eq('id', id)
+      .select('id')
+      .single(),
+  )
+}
+
+// Quita una evidencia: primero la fila (la base impide quitar la última del proyecto),
+// después el archivo. Si el archivo no se puede borrar queda huérfano e inaccesible.
+export async function eliminarEvidencia(id) {
+  const { ruta_archivo } = unwrap(
+    await supabase.from('evidencias').delete().eq('id', id).select('ruta_archivo').single(),
+  )
+  await eliminarArchivos([ruta_archivo]).catch(() => {})
 }
 
 // Los borrados de archivos pasan por el servidor (el navegador no tiene permiso directo).

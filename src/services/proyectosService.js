@@ -1,4 +1,4 @@
-import { supabase, unwrap } from './supabaseClient'
+import { invocar, supabase, unwrap } from './supabaseClient'
 import { subirEvidencia, eliminarArchivos } from './evidenciasService'
 
 const CAMPOS_LISTADO = `
@@ -108,6 +108,22 @@ function aCamposProyecto(datos) {
     monto: datos.monto === '' ? null : Number(datos.monto),
     moneda: datos.moneda,
   }
+}
+
+// Guarda datos, etiquetas y monto en una sola transacción (función actualizar_proyecto).
+export async function actualizarProyecto(id, datos) {
+  const campos = aCamposProyecto(datos)
+  unwrap(
+    await supabase.rpc('actualizar_proyecto', {
+      p_id: id,
+      ...Object.fromEntries(Object.entries(campos).map(([k, v]) => [`p_${k}`, v])),
+    }),
+  )
+}
+
+// Elimina el proyecto con todas sus evidencias y archivos (Edge Function eliminar-proyecto).
+export async function eliminarProyecto(id) {
+  return invocar('eliminar-proyecto', { proyectoId: id })
 }
 
 // Crea el proyecto con sus etiquetas, monto y evidencias.

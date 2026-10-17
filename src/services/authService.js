@@ -56,9 +56,7 @@ export async function iniciarSesion(email, password) {
   const { error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) {
     throw new Error(
-      error.message === 'Invalid login credentials'
-        ? 'Correo o contraseña incorrectos.'
-        : error.message,
+      error.message === 'Invalid login credentials' ? 'Correo o contraseña incorrectos.' : error.message,
     )
   }
 }

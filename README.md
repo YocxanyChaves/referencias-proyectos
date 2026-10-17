@@ -25,6 +25,7 @@ db/
     002_datos_iniciales.sql
     003_crear_proyecto.sql           proyecto + etiquetas + monto en una transacción
     004_crear_proyectos.sql          importación masiva: todos o ninguno
+    005_editar_proyecto.sql          actualizar_proyecto + regla: no quitar la última evidencia
   supabase/                Adaptador específico de Supabase
     100_auth_y_permisos.sql
     101_funciones_privadas.sql
@@ -32,9 +33,11 @@ db/
     103_evidencias_internas_por_pais.sql
     104_autoria_y_crear_proyecto.sql  creado_por / subido_por los fija la base de datos
     105_crear_proyectos.sql
+    106_editar_proyecto.sql
     functions/             Edge Functions (Deno)
       descargar-evidencia/          valida permiso, registra en descargas y entrega URL firmada (60 s)
       eliminar-archivos-evidencia/  borra archivos del almacenamiento (admin o editor del país)
+      eliminar-proyecto/            borra el proyecto (permiso por RLS) y después todos sus archivos
 ```
 
 Los archivos de evidencias no se leen ni se borran directamente desde el navegador: pasan por las Edge Functions, que usan la llave de servicio. Así toda descarga queda registrada y la bitácora `descargas` solo la escribe el servidor.

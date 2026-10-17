@@ -16,6 +16,16 @@ export const hashInicial = new URLSearchParams(window.location.hash.slice(1))
 
 export const supabase = createClient(url, key)
 
+// Llama a una Edge Function y devuelve su respuesta, o lanza el mensaje de error que envió.
+export async function invocar(funcion, cuerpo) {
+  const { data, error } = await supabase.functions.invoke(funcion, { body: cuerpo })
+  if (error) {
+    const detalle = await error.context?.json?.().catch(() => null)
+    throw new Error(detalle?.error ?? error.message)
+  }
+  return data
+}
+
 // Convierte la respuesta de Supabase en datos o en una excepción con mensaje legible.
 export function unwrap({ data, error }) {
   if (error) {

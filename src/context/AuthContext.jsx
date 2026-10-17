@@ -49,6 +49,8 @@ export function AuthProvider({ children }) {
     cargando: usuarioId === undefined || (usuarioId !== null && perfilDe !== usuarioId),
     errorPerfil,
     puedeCrear: rol === 'admin' || (rol === 'editor' && perfil?.paisId != null),
+    // Misma regla que privado.puede_editar_proyecto; la base de datos es quien la hace cumplir.
+    puedeEditarPais: (paisId) => rol === 'admin' || (rol === 'editor' && paisId === perfil?.paisId),
     contrasenaPendiente,
     errorEnlace: enlace.error,
     crearContrasena: async (password) => {

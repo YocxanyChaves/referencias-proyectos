@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { ESTADOS_PROYECTO, TIPOS_EVIDENCIA } from '../services/catalogosService'
 import { descargarEvidencia } from '../services/evidenciasService'
@@ -44,7 +44,8 @@ function Dato({ etiqueta, children }) {
 
 export default function ProyectoDetallePage() {
   const { id } = useParams()
-  const { rol } = useAuth()
+  const { rol, puedeEditarPais } = useAuth()
+  const location = useLocation()
   const [proyecto, setProyecto] = useState(undefined) // undefined = cargando; null = no existe
   const [error, setError] = useState(null)
   const [descargando, setDescargando] = useState(null) // id de la evidencia en curso
@@ -114,8 +115,16 @@ export default function ProyectoDetallePage() {
           </p>
           <h1>{p.titulo}</h1>
         </div>
-        <span className={`estado ${p.estado}`}>{NOMBRE_ESTADO[p.estado]}</span>
+        <div className="detalle-acciones">
+          <span className={`estado ${p.estado}`}>{NOMBRE_ESTADO[p.estado]}</span>
+          {puedeEditarPais(p.pais?.id) && (
+            <Link to={`/proyectos/${p.id}/editar`} className="boton secundario">
+              Editar
+            </Link>
+          )}
+        </div>
       </header>
+      {location.state?.mensaje && <p className="exito">{location.state.mensaje}</p>}
 
       <div className="detalle-columnas">
         <div className="detalle-principal">
