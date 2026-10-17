@@ -8,6 +8,17 @@ import { buscarProyectos } from '../services/proyectosService'
 const FILTROS_VACIOS = { etiquetas: [], paises: [], desde: '', hasta: '', texto: '' }
 const NOMBRE_ESTADO = Object.fromEntries(ESTADOS_PROYECTO.map((e) => [e.valor, e.nombre]))
 
+// Los filtros se recuerdan durante la sesión para no perderlos al volver de un proyecto.
+const CLAVE_FILTROS = 'filtros-proyectos'
+
+function filtrosGuardados() {
+  try {
+    return { ...FILTROS_VACIOS, ...JSON.parse(sessionStorage.getItem(CLAVE_FILTROS)) }
+  } catch {
+    return FILTROS_VACIOS
+  }
+}
+
 function formatearFecha(fecha) {
   if (!fecha) return '—'
   const [a, m, d] = fecha.split('-')
@@ -19,7 +30,7 @@ export default function ProyectosPage() {
   const location = useLocation()
   const [etiquetas, setEtiquetas] = useState([])
   const [paises, setPaises] = useState([])
-  const [filtros, setFiltros] = useState(FILTROS_VACIOS)
+  const [filtros, setFiltros] = useState(filtrosGuardados)
   const [proyectos, setProyectos] = useState([])
   const [pagina, setPagina] = useState(0)
   const [hayMas, setHayMas] = useState(false)
@@ -38,6 +49,11 @@ export default function ProyectosPage() {
 
   // Busca de nuevo al cambiar los filtros (con espera breve para el texto).
   useEffect(() => {
+    try {
+      sessionStorage.setItem(CLAVE_FILTROS, JSON.stringify(filtros))
+    } catch {
+      // sin almacenamiento: los filtros solo duran mientras la página esté abierta
+    }
     const t = setTimeout(() => cargar(0), 300)
     return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -118,7 +134,9 @@ export default function ProyectosPage() {
 
         {!cargando && !error && proyectos.length === 0 && (
           <div className="tarjeta vacio">
-            <p>{hayFiltros ? 'Ningún proyecto coincide con los filtros.' : 'Aún no hay proyectos registrados.'}</p>
+            <p>
+              {hayFiltros ? 'Ningún proyecto coincide con los filtros.' : 'Aún no hay proyectos registrados.'}
+            </p>
             {puedeCrear && !hayFiltros && <Link to="/proyectos/nuevo">Registrar el primero</Link>}
           </div>
         )}
@@ -127,11 +145,18 @@ export default function ProyectosPage() {
           {proyectos.map((p) => (
             <li key={p.id} className="tarjeta proyecto">
               <div className="proyecto-cabecera">
-                <h3>{p.titulo}</h3>
+                <h3>
+                  <Link to={`/proyectos/${p.id}`} className="enlace-proyecto">
+                    {p.titulo}
+                  </Link>
+                </h3>
                 <span className={`estado ${p.estado}`}>{NOMBRE_ESTADO[p.estado]}</span>
               </div>
               <p className="meta">
-                {p.cliente} · {p.pais?.nombre} · {formatearFecha(p.fechaInicio)} – {formatearFecha(p.fechaFin)}
+                {p.cliente} · {p.pais?.nombre} · {formatearFecha(p.fechaInicio)} –{' '}
+                {formatearFecha(p.fechaFin)}
+                {p.cantidadEvidencias != null &&
+                  ` · ${p.cantidadEvidencias} ${p.cantidadEvidencias === 1 ? 'evidencia' : 'evidencias'}`}
               </p>
               {p.descripcion && <p className="descripcion">{p.descripcion}</p>}
               <div className="chips">

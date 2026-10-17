@@ -4,8 +4,22 @@ import { subirEvidencia, eliminarArchivos } from './evidenciasService'
 const CAMPOS_LISTADO = `
   id, titulo, cliente, estado, fecha_inicio, fecha_fin, descripcion,
   pais:paises(id, nombre, codigo),
-  proyecto_etiquetas(etiqueta:etiquetas(id, nombre))
+  proyecto_etiquetas(etiqueta:etiquetas(id, nombre)),
+  evidencias(count)
 `
+
+// Las evidencias y el monto que llegan ya vienen filtrados por las políticas RLS:
+// el rol consulta solo recibe evidencias compartibles y nunca recibe el monto.
+const CAMPOS_DETALLE = `
+  id, titulo, cliente, estado, fecha_inicio, fecha_fin, descripcion, resultados,
+  contacto_referencia, creado_en, actualizado_en,
+  pais:paises(id, nombre, codigo),
+  proyecto_etiquetas(etiqueta:etiquetas(id, nombre)),
+  evidencias(id, tipo, descripcion, nombre_original, tamano_bytes, compartible, subido_en),
+  monto:proyecto_montos(monto, moneda)
+`
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 function aProyecto(fila) {
   return {
@@ -20,6 +34,36 @@ function aProyecto(fila) {
     etiquetas: (fila.proyecto_etiquetas ?? [])
       .map((pe) => pe.etiqueta)
       .sort((a, b) => a.nombre.localeCompare(b.nombre)),
+    cantidadEvidencias: fila.evidencias?.[0]?.count ?? null,
+  }
+}
+
+// Devuelve el proyecto con sus evidencias visibles para quien consulta, o null si no existe
+// o no tiene acceso. `monto` es null cuando el usuario no puede verlo.
+export async function obtenerProyecto(id) {
+  if (!UUID.test(id)) return null
+  const fila = unwrap(await supabase.from('proyectos').select(CAMPOS_DETALLE).eq('id', id).maybeSingle())
+  if (!fila) return null
+  const monto = Array.isArray(fila.monto) ? fila.monto[0] : fila.monto
+  return {
+    ...aProyecto(fila),
+    resultados: fila.resultados,
+    contactoReferencia: fila.contacto_referencia,
+    creadoEn: fila.creado_en,
+    actualizadoEn: fila.actualizado_en,
+    monto: monto ? { valor: Number(monto.monto), moneda: monto.moneda } : null,
+    evidencias: (fila.evidencias ?? [])
+      .map((e) => ({
+        id: e.id,
+        tipo: e.tipo,
+        descripcion: e.descripcion,
+        nombre: e.nombre_original,
+        tamano: e.tamano_bytes,
+        compartible: e.compartible,
+        subidoEn: e.subido_en,
+      }))
+      // Orden natural por nombre: 1.2 antes que 1.10
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { numeric: true })),
   }
 }
 

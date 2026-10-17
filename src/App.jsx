@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext'
 import CrearContrasenaPage from './pages/CrearContrasenaPage'
 import LoginPage from './pages/LoginPage'
 import NuevoProyectoPage from './pages/NuevoProyectoPage'
+import ProyectoDetallePage from './pages/ProyectoDetallePage'
 import ProyectosPage from './pages/ProyectosPage'
 
 export default function App() {
@@ -17,6 +18,7 @@ export default function App() {
           <Route element={<RutaProtegida />}>
             <Route element={<Layout />}>
               <Route index element={<ProyectosPage />} />
+              <Route path="/proyectos/:id" element={<ProyectoDetallePage />} />
               <Route element={<RutaProtegida requiereCrear />}>
                 <Route path="/proyectos/nuevo" element={<NuevoProyectoPage />} />
               </Route>
