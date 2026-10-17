@@ -1,10 +1,20 @@
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { MAX_FILAS } from '../lib/excelProyectos'
+import AyudaPlantilla from './AyudaPlantilla'
 
 // Panel para cargar proyectos desde Excel: arrastrar y soltar o elegir archivo, y descargar la plantilla.
 export default function ZonaExcel({ onArchivo, onDescargarPlantilla, ocupado, leyendo, estado }) {
   const input = useRef(null)
+  const botonPlantilla = useRef(null)
   const [encima, setEncima] = useState(false)
+  const [ayuda, setAyuda] = useState(null) // { descargando, y }
+  const cerrarAyuda = useCallback(() => setAyuda(null), [])
+
+  // La burbuja apunta al botón de la plantilla.
+  function abrirAyuda(descargando) {
+    const b = botonPlantilla.current
+    setAyuda({ descargando, y: b ? b.offsetTop + b.offsetHeight / 2 : 0 })
+  }
 
   function elegir(archivo) {
     if (archivo && !ocupado) onArchivo(archivo)
@@ -95,9 +105,27 @@ export default function ZonaExcel({ onArchivo, onDescargarPlantilla, ocupado, le
         </div>
       )}
 
-      <button type="button" className="secundario" onClick={onDescargarPlantilla}>
-        Descargar plantilla
-      </button>
+      <div className="acciones-plantilla">
+        <button
+          ref={botonPlantilla}
+          type="button"
+          className="secundario"
+          data-abre-ayuda
+          onClick={() => {
+            onDescargarPlantilla()
+            abrirAyuda(true)
+          }}
+        >
+          Descargar plantilla
+        </button>
+        <button type="button" className="enlace" data-abre-ayuda onClick={() => abrirAyuda(false)}>
+          ¿Cómo funciona?
+        </button>
+      </div>
+
+      {ayuda && (
+        <AyudaPlantilla descargando={ayuda.descargando} alturaFlecha={ayuda.y} onCerrar={cerrarAyuda} />
+      )}
     </aside>
   )
 }

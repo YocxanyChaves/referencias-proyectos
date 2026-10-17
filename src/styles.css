@@ -177,9 +177,70 @@ button.chip { cursor: pointer; }
 }
 .ok-texto { color: var(--exito); font-weight: 500; }
 
+.acciones-plantilla { display: flex; flex-direction: column; align-items: stretch; gap: .25rem; }
+.acciones-plantilla .enlace { margin: 0; align-self: center; }
+
+/* Burbuja de ayuda de la plantilla: a la izquierda del panel, apuntando al botón */
+.ayuda-plantilla {
+  position: absolute; top: 0; right: calc(100% + 14px); z-index: 20;
+  width: 420px; background: var(--superficie); color: var(--texto);
+  border: 1px solid var(--primario); border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(20, 40, 70, .18);
+  animation: aparecer .16s ease-out;
+}
+.ayuda-plantilla:focus { outline: none; }
+.ayuda-contenido {
+  display: flex; flex-direction: column; gap: .8rem; padding: 1.1rem 1.2rem;
+  max-height: calc(100vh - 3rem); overflow-y: auto;
+}
+.ayuda-flecha {
+  position: absolute; right: -8px; top: calc(var(--flecha-y) - 8px);
+  width: 14px; height: 14px; background: var(--superficie);
+  border-top: 1px solid var(--primario); border-right: 1px solid var(--primario); transform: rotate(45deg);
+}
+@keyframes aparecer { from { opacity: 0; transform: translateX(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .ayuda-plantilla { animation: none; } }
+.ayuda-cabecera { display: flex; justify-content: space-between; align-items: start; gap: .5rem; }
+.ayuda-cabecera h3 { font-size: 1.05rem; }
+.ayuda-cerrar { background: none; border: none; color: var(--suave); font-size: 1.4rem; line-height: 1; padding: 0 .2rem; }
+.ayuda-descarga { margin: -.4rem 0 0; color: var(--exito); font-size: .88rem; }
+.ayuda-pasos { margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: .4rem; font-size: .9rem; }
+.ayuda-pasos b { color: var(--primario); }
+
+.ayuda-diagrama {
+  display: flex; flex-direction: column; align-items: center; gap: .35rem;
+  padding: .7rem; background: var(--fondo); border-radius: 8px;
+}
+.diagrama-rotulo { display: block; font-size: .7rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--suave); margin-bottom: .3rem; }
+.diagrama-excel table { border-collapse: collapse; width: 100%; font-size: .74rem; background: var(--superficie); }
+.diagrama-excel th, .diagrama-excel td { border: 1px solid var(--borde); padding: .2rem .3rem; text-align: left; white-space: nowrap; }
+.diagrama-excel th { background: #e6effa; font-weight: 600; }
+.diagrama-excel th:nth-child(n+3) { background: #ddf1e4; }
+.diagrama-excel td.x { text-align: center; font-weight: 700; color: #157347; }
+.diagrama-excel, .diagrama-carpeta { width: 100%; }
+.diagrama-flecha { width: 22px; height: 22px; color: var(--suave); }
+.diagrama-flecha path { vector-effect: non-scaling-stroke; }
+.insignia { display: inline-grid; place-items: center; min-width: 1.2rem; height: 1.2rem; border-radius: 4px; font-weight: 700; color: #fff; }
+.insignia.p1 { background: #1f5fa8; }
+.insignia.p2 { background: #b8590a; }
+.arbol { font-size: .76rem; font-family: Consolas, ui-monospace, monospace; display: flex; flex-direction: column; gap: .15rem; }
+.arbol-raiz { display: flex; align-items: center; gap: .3rem; color: #9a6a12; font-weight: 600; font-family: system-ui, sans-serif; }
+.arbol-archivo svg { flex: none; }
+.arbol-archivo { display: flex; align-items: center; gap: .3rem; margin-left: .7rem; padding-left: .5rem; border-left: 2px solid var(--borde); white-space: nowrap; }
+.arbol-archivo b { padding: 0 .25rem; border-radius: 3px; color: #fff; }
+.arbol-archivo.p1 b { background: #1f5fa8; }
+.arbol-archivo.p2 b { background: #b8590a; }
+.ayuda-reglas { background: #fdecea; color: #7f1d16; border-radius: 8px; padding: .6rem .8rem; font-size: .85rem; }
+.ayuda-reglas ul { margin: .25rem 0; padding-left: 1.1rem; }
+.ayuda-reglas p { margin: 0; color: var(--texto); }
+.ayuda-entendido { align-self: flex-end; }
+
 @media (max-width: 960px) {
   .nuevo-proyecto { grid-template-columns: 1fr; }
   .zona-excel { position: static; order: -1; margin-top: 0; }
+  .ayuda-plantilla { position: relative; top: auto; right: auto; width: auto; margin-top: .5rem; }
+  .ayuda-contenido { max-height: none; }
+  .ayuda-flecha { right: auto; left: calc(50% - 7px); top: -8px; transform: rotate(-45deg); }
 }
 
 @media (max-width: 800px) {

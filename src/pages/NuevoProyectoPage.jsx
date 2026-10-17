@@ -180,11 +180,11 @@ export default function NuevoProyectoPage() {
           <h2>Datos generales</h2>
           <label>
             Título *
-            <input {...campo('titulo')} required maxLength={300} />
+            <input {...campo('titulo')} required maxLength={500} />
           </label>
           <label>
             Cliente *
-            <input {...campo('cliente')} required maxLength={300} />
+            <input {...campo('cliente')} required maxLength={500} />
           </label>
           <div className="fila">
             <label>

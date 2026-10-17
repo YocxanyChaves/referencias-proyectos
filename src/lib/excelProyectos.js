@@ -5,32 +5,36 @@
 export const MAX_FILAS = 500
 export const MAX_BYTES = 5 * 1024 * 1024
 const FILAS_PLANTILLA = MAX_FILAS
-const NUM_ETIQUETAS = 5
 
-const COLUMNAS = [
-  { clave: 'numero', titulo: 'N.º', requerida: true, ancho: 7 },
-  { clave: 'titulo', titulo: 'Título', requerida: true, ancho: 42 },
-  { clave: 'cliente', titulo: 'Cliente', requerida: true, ancho: 32 },
-  { clave: 'pais', titulo: 'País', requerida: true, ancho: 16 },
-  { clave: 'estado', titulo: 'Estado', requerida: true, ancho: 14 },
-  { clave: 'fechaInicio', titulo: 'Fecha de inicio', ancho: 16 },
-  { clave: 'fechaFin', titulo: 'Fecha de fin', ancho: 16 },
-  ...Array.from({ length: NUM_ETIQUETAS }, (_, i) => ({
-    clave: 'etiqueta',
-    titulo: `Etiqueta ${i + 1}`,
-    requerida: i === 0,
-    ancho: 28,
-  })),
-  { clave: 'descripcion', titulo: 'Descripción', ancho: 50 },
-  { clave: 'resultados', titulo: 'Resultados', ancho: 40 },
-  { clave: 'contactoReferencia', titulo: 'Contacto de referencia', ancho: 34 },
-  { clave: 'monto', titulo: 'Monto', ancho: 14 },
-  { clave: 'moneda', titulo: 'Moneda', ancho: 10 },
-]
+// Columnas de la plantilla. Las primeras siguen el formato de la matriz de clasificación
+// (docs/Etiquetas_proyectos_ICAP.xlsx): N.º, nombre y una columna por etiqueta marcada con X,
+// para poder copiar y pegar esa matriz tal cual. Las etiquetas van en orden de creación (id).
+function columnasPlantilla(etiquetas) {
+  return [
+    { clave: 'numero', titulo: 'N.º', requerida: true, ancho: 7 },
+    { clave: 'titulo', titulo: 'Título', requerida: true, ancho: 42 },
+    ...[...etiquetas]
+      .sort((a, b) => a.id - b.id)
+      .map((e) => ({ clave: 'marca', etiquetaId: e.id, titulo: e.nombre, ancho: 6 })),
+    { clave: 'cliente', titulo: 'Cliente', requerida: true, ancho: 32 },
+    { clave: 'pais', titulo: 'País', requerida: true, ancho: 16 },
+    { clave: 'estado', titulo: 'Estado', requerida: true, ancho: 14 },
+    { clave: 'fechaInicio', titulo: 'Fecha de inicio', ancho: 16 },
+    { clave: 'fechaFin', titulo: 'Fecha de fin', ancho: 16 },
+    { clave: 'descripcion', titulo: 'Descripción', ancho: 50 },
+    { clave: 'resultados', titulo: 'Resultados', ancho: 40 },
+    { clave: 'contactoReferencia', titulo: 'Contacto de referencia', ancho: 34 },
+    { clave: 'monto', titulo: 'Monto', ancho: 14 },
+    { clave: 'moneda', titulo: 'Moneda', ancho: 10 },
+  ]
+}
 
 // Encabezados aceptados (normalizados) para cada campo, por si el Excel no viene de la plantilla.
 const ALIAS = {
-  numero: ['n.º', 'nº', 'n.°', 'n°', 'n.o', 'no.', 'no', 'n', '#', 'num', 'numero', 'numero de proyecto'],
+  numero: [
+    'n.º', 'nº', 'n.°', 'n°', 'n.o', 'no.', 'no', 'n', '#', 'num', 'numero', 'numero de proyecto',
+    '# documento', '# de documento', 'n.º documento', 'numero de documento', 'documento',
+  ],
   titulo: ['titulo', 'titulo del proyecto', 'nombre del proyecto', 'proyecto'],
   cliente: ['cliente', 'contratante'],
   pais: ['pais'],
@@ -56,11 +60,22 @@ function normalizar(texto) {
     .toLowerCase()
 }
 
-function campoDeEncabezado(encabezado) {
+// Devuelve { campo } o { campo: 'marca', etiquetaId } para una columna de la matriz de etiquetas.
+function campoDeEncabezado(encabezado, etiquetaPorNombre) {
   const n = normalizar(encabezado)
   if (!n) return null
-  if (n.startsWith('etiqueta')) return 'etiqueta'
-  return Object.keys(ALIAS).find((campo) => ALIAS[campo].includes(n)) ?? null
+  const alias = Object.keys(ALIAS).find((campo) => ALIAS[campo].includes(n))
+  if (alias) return { campo: alias }
+  const etiqueta = etiquetaPorNombre.get(n)
+  if (etiqueta) return { campo: 'marca', etiquetaId: etiqueta.id }
+  if (n.startsWith('etiqueta')) return { campo: 'etiqueta' } // "Etiqueta 1", "Etiquetas": nombres
+  return null
+}
+
+// En la matriz, una celda marca la etiqueta si tiene X (o ✓, sí, 1…).
+function esMarca(valor) {
+  const n = normalizar(valor)
+  return n !== '' && !['no', '0', 'false', 'falso', '-', 'n/a'].includes(n)
 }
 
 async function cargarExcelJS() {
@@ -76,7 +91,8 @@ export async function generarPlantilla({ paises, etiquetas, paisFijo = null }) {
   const libro = new ExcelJS.Workbook()
   libro.creator = 'Referencias de Proyectos'
 
-  const hoja = libro.addWorksheet('Proyectos', { views: [{ state: 'frozen', ySplit: 1 }] })
+  const COLUMNAS = columnasPlantilla(etiquetas)
+  const hoja = libro.addWorksheet('Proyectos', { views: [{ state: 'frozen', xSplit: 2, ySplit: 1 }] })
   const instrucciones = libro.addWorksheet('Instrucciones')
   const catalogos = libro.addWorksheet('Catálogos')
 
@@ -98,22 +114,25 @@ export async function generarPlantilla({ paises, etiquetas, paisFijo = null }) {
     width: c.ancho,
   }))
   const encabezado = hoja.getRow(1)
-  encabezado.height = 30
+  encabezado.height = 175 // los nombres de etiquetas van en vertical
   COLUMNAS.forEach((c, i) => {
     const celda = encabezado.getCell(i + 1)
+    const esMatriz = c.clave === 'marca'
     celda.font = { bold: true, color: { argb: 'FF1D2530' } }
-    celda.alignment = { vertical: 'middle', wrapText: true }
+    celda.alignment = esMatriz
+      ? { textRotation: 90, vertical: 'bottom', horizontal: 'center', wrapText: true }
+      : { vertical: 'bottom', wrapText: true }
     celda.fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: c.requerida ? 'FFFCE8B2' : 'FFE6EFFA' },
+      fgColor: { argb: c.requerida ? 'FFFCE8B2' : esMatriz ? 'FFDDF1E4' : 'FFE6EFFA' },
     }
-    celda.border = { bottom: { style: 'thin', color: { argb: 'FF8A9AAB' } } }
+    celda.border = { bottom: { style: 'thin', color: { argb: 'FF8A9AAB' } }, right: esMatriz ? { style: 'hair', color: { argb: 'FFB7C4CF' } } : undefined }
+    if (esMatriz) hoja.getColumn(i + 1).alignment = { horizontal: 'center' }
   })
 
   // Validaciones y formatos por columna
   const rangoPaises = `'Catálogos'!$A$2:$A$${listaPaises.length + 1}`
-  const rangoEtiquetas = `'Catálogos'!$B$2:$B$${etiquetas.length + 1}`
   const validacion = (c) => {
     switch (c.clave) {
       case 'numero':
@@ -122,8 +141,8 @@ export async function generarPlantilla({ paises, etiquetas, paisFijo = null }) {
         return { type: 'list', allowBlank: true, formulae: [rangoPaises], showErrorMessage: true, error: 'Elige un país de la lista.' }
       case 'estado':
         return { type: 'list', allowBlank: true, formulae: ['"Finalizado,En curso"'], showErrorMessage: true, error: 'Elige Finalizado o En curso.' }
-      case 'etiqueta':
-        return { type: 'list', allowBlank: true, formulae: [rangoEtiquetas], showErrorMessage: true, error: 'Elige una etiqueta de la lista.' }
+      case 'marca':
+        return { type: 'list', allowBlank: true, formulae: ['"X"'], showErrorMessage: true, error: 'Escribe X si la etiqueta aplica, o deja la celda vacía.' }
       case 'fechaInicio':
       case 'fechaFin':
         return { type: 'date', operator: 'greaterThan', allowBlank: true, formulae: [new Date(Date.UTC(1950, 0, 1))], showErrorMessage: true, error: 'Escribe una fecha, por ejemplo 15/03/2024.' }
@@ -158,8 +177,10 @@ export async function generarPlantilla({ paises, etiquetas, paisFijo = null }) {
     ['1. Una fila por proyecto. No cambies los encabezados.'],
     ['2. En "N.º" numera los proyectos: 1, 2, 3… Sin repetir. Ese número une el proyecto con sus evidencias.'],
     ['3. Las columnas con * son obligatorias. "Fecha de fin" es obligatoria si el estado es Finalizado.'],
-    ['4. País, Estado y Etiquetas se eligen de la lista desplegable de cada celda.'],
-    [`5. Cada proyecto necesita al menos una etiqueta. Hay ${NUM_ETIQUETAS} columnas; deja vacías las que no uses.`],
+    ['4. Etiquetas: hay una columna (verde) por etiqueta. Escribe X en las que aplican al proyecto; deja vacías las demás.'],
+    ['   Cada proyecto necesita al menos una X. Es el mismo formato de la matriz de clasificación: puedes copiar y pegar'],
+    ['   tus columnas "# documento", "Nombre del proyecto" y las de etiquetas directamente desde la columna A.'],
+    ['5. País y Estado se eligen de la lista desplegable de cada celda.'],
     ['6. Fechas en formato día/mes/año, por ejemplo 15/03/2024.'],
     ['7. Monto: solo el número, sin símbolo. Moneda: código de 3 letras (USD, CRC, GTQ, PAB). Si queda vacía, se usa USD.'],
     ['   El monto es de uso interno: no lo ve el rol consulta ni se incluye en exportaciones.'],
@@ -292,24 +313,47 @@ export async function leerExcel(archivo, { paises, etiquetas, paisFijo = null })
     libro.worksheets.find((h) => normalizar(h.name) === 'proyectos') ?? libro.worksheets[0]
   if (!hoja) throw new Error('El archivo no tiene hojas.')
 
+  const etiquetaPorNombre = new Map(etiquetas.map((e) => [normalizar(e.nombre), e]))
+
   // Encabezados: la primera de las 5 primeras filas que tenga al menos dos columnas conocidas.
   let filaEncabezado = null
   let mapa = []
+  let desconocidas = []
   for (let r = 1; r <= Math.min(5, hoja.rowCount); r++) {
     const candidatos = []
+    const otras = []
     hoja.getRow(r).eachCell({ includeEmpty: false }, (celda, col) => {
-      const campo = campoDeEncabezado(texto(valorCelda(celda.value)))
-      if (campo) candidatos.push({ col, campo })
+      const encabezado = texto(valorCelda(celda.value))
+      const campo = campoDeEncabezado(encabezado, etiquetaPorNombre)
+      if (campo) candidatos.push({ col, ...campo })
+      else if (encabezado) otras.push(encabezado)
     })
     if (candidatos.length >= 2) {
       filaEncabezado = r
       mapa = candidatos
+      desconocidas = otras
       break
     }
   }
   const tiene = (campo) => mapa.some((m) => m.campo === campo)
-  if (!filaEncabezado || !tiene('titulo') || !tiene('cliente')) {
-    throw new Error('No se encontraron las columnas "Título" y "Cliente". Descarga la plantilla y úsala como base.')
+  if (!filaEncabezado) {
+    throw new Error('No se encontraron los encabezados de la plantilla. Descarga la plantilla y úsala como base.')
+  }
+  const obligatorias = [
+    ['titulo', 'Título'],
+    ['cliente', 'Cliente'],
+    ...(paisFijo ? [] : [['pais', 'País']]),
+    ['estado', 'Estado'],
+  ]
+  const faltantes = obligatorias.filter(([campo]) => !tiene(campo)).map(([, nombre]) => `"${nombre}"`)
+  if (faltantes.length) {
+    const esMatriz = tiene('marca') && !tiene('cliente')
+    throw new Error(
+      `Faltan las columnas ${faltantes.join(', ')}.` +
+        (esMatriz
+          ? ' Este archivo parece la matriz de clasificación: descarga la plantilla, pega ahí la matriz desde la columna A y completa los demás datos.'
+          : ' Descarga la plantilla y úsala como base.'),
+    )
   }
 
   const paisPorClave = new Map()
@@ -317,24 +361,32 @@ export async function leerExcel(archivo, { paises, etiquetas, paisFijo = null })
     paisPorClave.set(normalizar(p.nombre), p)
     paisPorClave.set(normalizar(p.codigo), p)
   }
-  const etiquetaPorNombre = new Map(etiquetas.map((e) => [normalizar(e.nombre), e]))
   const paisDelEditor = paisFijo ? paises.find((p) => p.id === paisFijo) : null
 
   const filas = []
-  const advertencias = []
+  const advertencias = desconocidas.length
+    ? [
+        `Se ignoraron columnas que no se reconocen: ${desconocidas.map((d) => `"${d}"`).join(', ')}. ` +
+          'Si alguna es una etiqueta, revisa que se llame igual que en el sistema.',
+      ]
+    : []
   for (let r = filaEncabezado + 1; r <= hoja.rowCount; r++) {
     const fila = hoja.getRow(r)
-    const crudo = { etiqueta: [] }
-    for (const { col, campo } of mapa) {
+    const crudo = { etiqueta: [], marcas: [] }
+    for (const { col, campo, etiquetaId } of mapa) {
       const v = valorCelda(fila.getCell(col).value)
       if (campo === 'etiqueta') crudo.etiqueta.push(v)
-      else crudo[campo] = v
+      else if (campo === 'marca') {
+        if (esMarca(v)) crudo.marcas.push(etiquetaId)
+      } else crudo[campo] = v
     }
     // Vacía aunque tenga el N.º escrito (por si numeraron filas de más).
     const vacia = Object.entries(crudo).every(([k, v]) =>
-      k === 'numero' ? true : k === 'etiqueta' ? v.every((x) => !texto(x)) : !texto(v),
+      k === 'numero' || k === 'marcas' ? true : k === 'etiqueta' ? v.every((x) => !texto(x)) : !texto(v),
     )
     if (vacia) continue
+    // Fila de totales de la matriz (p. ej. "Total" con fórmulas CONTAR.SI)
+    if (normalizar(crudo.titulo) === 'total' && !texto(crudo.numero) && !texto(crudo.cliente)) continue
 
     if (filas.length === MAX_FILAS) {
       throw new Error(`El archivo tiene más de ${MAX_FILAS} proyectos. Divídelo en varios archivos.`)
@@ -354,9 +406,9 @@ export async function leerExcel(archivo, { paises, etiquetas, paisFijo = null })
     const titulo = texto(crudo.titulo)
     const cliente = texto(crudo.cliente)
     if (!titulo) errores.push('Falta el título.')
-    else if (titulo.length > 300) errores.push('El título supera 300 caracteres.')
+    else if (titulo.length > 500) errores.push('El título supera 500 caracteres.')
     if (!cliente) errores.push('Falta el cliente.')
-    else if (cliente.length > 300) errores.push('El cliente supera 300 caracteres.')
+    else if (cliente.length > 500) errores.push('El cliente supera 500 caracteres.')
 
     // País
     let pais = null
@@ -387,18 +439,21 @@ export async function leerExcel(archivo, { paises, etiquetas, paisFijo = null })
     }
     if (estado === 'finalizado' && fechaFin === '') errores.push('Un proyecto finalizado necesita fecha de fin.')
 
-    // Etiquetas: una por columna, o varias separadas por ";" en una celda
+    // Etiquetas: X en la matriz (una columna por etiqueta) o, en formatos anteriores,
+    // columnas "Etiqueta N" con el nombre (varias separadas por ";").
+    const etiquetasFila = etiquetas.filter((e) => crudo.marcas.includes(e.id))
     const nombresEtiquetas = crudo.etiqueta
       .flatMap((v) => texto(v).split(/[;\n]/))
       .map((s) => s.trim())
       .filter(Boolean)
-    const etiquetasFila = []
     for (const nombre of nombresEtiquetas) {
       const e = etiquetaPorNombre.get(normalizar(nombre))
       if (!e) errores.push(`Etiqueta desconocida: "${nombre}".`)
       else if (!etiquetasFila.includes(e)) etiquetasFila.push(e)
     }
-    if (nombresEtiquetas.length === 0) errores.push('Falta al menos una etiqueta.')
+    if (etiquetasFila.length === 0 && nombresEtiquetas.length === 0) {
+      errores.push('Falta al menos una etiqueta (marca con X la columna de la etiqueta).')
+    }
 
     // Monto y moneda
     const monto = leerMonto(crudo.monto)
