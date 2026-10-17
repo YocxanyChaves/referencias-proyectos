@@ -72,6 +72,12 @@ npm run dev
 
 ### Carga desde Excel
 
-En **Nuevo proyecto** hay un panel para arrastrar un `.xlsx` y un botón para descargar la plantilla (con listas desplegables de país, estado y etiquetas). Un archivo con un proyecto llena el formulario; con varios, se muestra una revisión por fila y se importan todos en una sola transacción. La lógica está en `src/lib/excelProyectos.js`.
+En **Nuevo proyecto** hay un panel para arrastrar un `.xlsx` y un botón para descargar la plantilla (listas desplegables de país, estado y etiquetas, e instrucciones).
+
+- **Un proyecto** en el Excel: llena el formulario y ahí se adjuntan las evidencias.
+- **Varios proyectos**: se pide además la carpeta de evidencias. Cada archivo se nombra `<N.º>.<consecutivo> descripción.ext` (`1.1 Contrato.pdf`, `1.2 Acta.pdf`, `2.1 Informe.docx`), donde N.º es la columna del Excel. Se rechaza la carga si un archivo no sigue la guía, si hay códigos repetidos o de proyectos inexistentes, o si algún proyecto queda sin evidencias.
+- Los proyectos se crean en una transacción (`crear_proyectos`) y luego se suben las evidencias; si una falla, se borran archivos y proyectos.
+
+**Regla: no se aceptan proyectos sin evidencias** (formulario y carga masiva). La lógica está en `src/lib/excelProyectos.js` y `src/lib/evidenciasCarpeta.js`.
 
 Fase 1: inicio de sesión, listado y búsqueda de proyectos (por etiquetas, país, texto y fecha de fin) y creación de proyectos con etiquetas, monto y evidencias.

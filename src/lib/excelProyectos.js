@@ -8,6 +8,7 @@ const FILAS_PLANTILLA = MAX_FILAS
 const NUM_ETIQUETAS = 5
 
 const COLUMNAS = [
+  { clave: 'numero', titulo: 'N.º', requerida: true, ancho: 7 },
   { clave: 'titulo', titulo: 'Título', requerida: true, ancho: 42 },
   { clave: 'cliente', titulo: 'Cliente', requerida: true, ancho: 32 },
   { clave: 'pais', titulo: 'País', requerida: true, ancho: 16 },
@@ -29,6 +30,7 @@ const COLUMNAS = [
 
 // Encabezados aceptados (normalizados) para cada campo, por si el Excel no viene de la plantilla.
 const ALIAS = {
+  numero: ['n.º', 'nº', 'n.°', 'n°', 'n.o', 'no.', 'no', 'n', '#', 'num', 'numero', 'numero de proyecto'],
   titulo: ['titulo', 'titulo del proyecto', 'nombre del proyecto', 'proyecto'],
   cliente: ['cliente', 'contratante'],
   pais: ['pais'],
@@ -114,6 +116,8 @@ export async function generarPlantilla({ paises, etiquetas, paisFijo = null }) {
   const rangoEtiquetas = `'Catálogos'!$B$2:$B$${etiquetas.length + 1}`
   const validacion = (c) => {
     switch (c.clave) {
+      case 'numero':
+        return { type: 'whole', operator: 'greaterThanOrEqual', allowBlank: true, formulae: [1], showErrorMessage: true, error: 'Escribe el número del proyecto: 1, 2, 3…' }
       case 'pais':
         return { type: 'list', allowBlank: true, formulae: [rangoPaises], showErrorMessage: true, error: 'Elige un país de la lista.' }
       case 'estado':
@@ -141,22 +145,50 @@ export async function generarPlantilla({ paises, etiquetas, paisFijo = null }) {
 
   // Instrucciones
   instrucciones.getColumn(1).width = 110
+  const titulo = { bold: true, size: 14 }
+  const subtitulo = { bold: true, size: 12 }
+  const alerta = { bold: true, color: { argb: 'FFB42318' } }
+  const ejemplo = { name: 'Consolas', color: { argb: 'FF1F5FA8' } }
   const lineas = [
-    ['Cómo llenar la plantilla', { bold: true, size: 14 }],
+    ['Cómo cargar proyectos desde Excel', titulo],
     [''],
-    ['1. Llena una fila por proyecto en la hoja "Proyectos". No cambies los encabezados.'],
-    ['2. Las columnas con * son obligatorias. "Fecha de fin" es obligatoria si el estado es Finalizado.'],
-    ['3. País, Estado y Etiquetas se eligen de la lista desplegable de cada celda.'],
-    [`4. Cada proyecto necesita al menos una etiqueta. Hay ${NUM_ETIQUETAS} columnas; deja vacías las que no uses.`],
-    ['5. Fechas en formato día/mes/año, por ejemplo 15/03/2024.'],
-    ['6. Monto: solo el número, sin símbolo. Moneda: código de 3 letras (USD, CRC, GTQ, PAB). Si queda vacía, se usa USD.'],
+    ['Se entregan dos cosas: este Excel y una carpeta con las evidencias.', { bold: true }],
+    [''],
+    ['PASO 1 · El Excel (hoja "Proyectos")', subtitulo],
+    ['1. Una fila por proyecto. No cambies los encabezados.'],
+    ['2. En "N.º" numera los proyectos: 1, 2, 3… Sin repetir. Ese número une el proyecto con sus evidencias.'],
+    ['3. Las columnas con * son obligatorias. "Fecha de fin" es obligatoria si el estado es Finalizado.'],
+    ['4. País, Estado y Etiquetas se eligen de la lista desplegable de cada celda.'],
+    [`5. Cada proyecto necesita al menos una etiqueta. Hay ${NUM_ETIQUETAS} columnas; deja vacías las que no uses.`],
+    ['6. Fechas en formato día/mes/año, por ejemplo 15/03/2024.'],
+    ['7. Monto: solo el número, sin símbolo. Moneda: código de 3 letras (USD, CRC, GTQ, PAB). Si queda vacía, se usa USD.'],
     ['   El monto es de uso interno: no lo ve el rol consulta ni se incluye en exportaciones.'],
-    [`7. Máximo ${MAX_FILAS} proyectos por archivo.`],
+    [`8. Máximo ${MAX_FILAS} proyectos por archivo.`],
     [''],
-    ['Al cargar el archivo en "Nuevo proyecto":', { bold: true }],
-    ['- Si tiene un solo proyecto, sus datos llenan el formulario y ahí puedes adjuntar evidencias.'],
-    ['- Si tiene varios, verás una revisión fila por fila. Se guardan todos juntos o ninguno, así que no quedan importaciones a medias.'],
-    ['- El Excel no incluye evidencias (archivos).'],
+    ['PASO 2 · La carpeta de evidencias', subtitulo],
+    ['Todas las evidencias van en una sola carpeta. Cada archivo se nombra con el N.º del proyecto, un punto y un consecutivo:'],
+    [''],
+    ['   Evidencias/', ejemplo],
+    ['      1.1 Contrato.pdf             → proyecto 1, evidencia 1', ejemplo],
+    ['      1.2 Acta de recepción.pdf    → proyecto 1, evidencia 2', ejemplo],
+    ['      1.3 Fotos del taller.jpg     → proyecto 1, evidencia 3', ejemplo],
+    ['      2.1 Informe final.docx       → proyecto 2, evidencia 1', ejemplo],
+    ['      3.1 Carta de referencia.pdf  → proyecto 3, evidencia 1', ejemplo],
+    [''],
+    ['IMPORTANTE: si la carpeta no sigue esta guía, la carga se rechaza completa.', alerta],
+    ['- Todos los proyectos del Excel deben tener al menos una evidencia. No se aceptan proyectos sin evidencias.', alerta],
+    ['- El nombre de cada archivo debe empezar con N.º.consecutivo (1.1, 1.2, 2.1…). Después puedes poner una descripción.'],
+    ['- No repitas un código: no puede haber dos archivos 1.2.'],
+    ['- Cada código debe corresponder a un N.º que exista en el Excel.'],
+    ['- Se acepta cualquier tipo de archivo (PDF, Word, Excel, fotos, etc.), hasta 50 MB cada uno.'],
+    [''],
+    ['PASO 3 · Revisar e importar', subtitulo],
+    ['En "Nuevo proyecto", arrastra el Excel al panel "Cargar desde Excel" y después la carpeta de evidencias.'],
+    ['Verás una revisión de cada proyecto con sus evidencias. Ahí puedes cambiar el tipo de cada evidencia y si es compartible.'],
+    ['Los archivos con "contrato" en el nombre se marcan como de uso interno (no compartibles): no los ve el rol consulta.'],
+    ['Se guardan todos los proyectos y evidencias juntos, o ninguno, así que no quedan cargas a medias.'],
+    [''],
+    ['Si el Excel tiene un solo proyecto, sus datos llenan el formulario y ahí adjuntas las evidencias directamente.'],
   ]
   lineas.forEach(([texto, fuente], i) => {
     const celda = instrucciones.getCell(i + 1, 1)
@@ -298,8 +330,9 @@ export async function leerExcel(archivo, { paises, etiquetas, paisFijo = null })
       if (campo === 'etiqueta') crudo.etiqueta.push(v)
       else crudo[campo] = v
     }
+    // Vacía aunque tenga el N.º escrito (por si numeraron filas de más).
     const vacia = Object.entries(crudo).every(([k, v]) =>
-      k === 'etiqueta' ? v.every((x) => !texto(x)) : !texto(v),
+      k === 'numero' ? true : k === 'etiqueta' ? v.every((x) => !texto(x)) : !texto(v),
     )
     if (vacia) continue
 
@@ -308,6 +341,16 @@ export async function leerExcel(archivo, { paises, etiquetas, paisFijo = null })
     }
 
     const errores = []
+    // El N.º une el proyecto con sus evidencias (1.1, 1.2…). Sus errores van aparte porque
+    // solo importan en la carga masiva; con un solo proyecto se usa el formulario.
+    const erroresNumero = []
+    let numero = null
+    if (tiene('numero')) {
+      const n = texto(crudo.numero)
+      if (!n) erroresNumero.push('Falta el N.º del proyecto.')
+      else if (!/^\d+$/.test(n) || Number(n) < 1) erroresNumero.push(`N.º no válido: "${n}". Usa 1, 2, 3…`)
+      else numero = Number(n)
+    }
     const titulo = texto(crudo.titulo)
     const cliente = texto(crudo.cliente)
     if (!titulo) errores.push('Falta el título.')
@@ -365,7 +408,9 @@ export async function leerExcel(archivo, { paises, etiquetas, paisFijo = null })
 
     filas.push({
       fila: r,
+      numero,
       errores,
+      erroresNumero,
       nombres: { pais: pais?.nombre ?? paisTexto, etiquetas: etiquetasFila.map((e) => e.nombre) },
       datos: {
         titulo,
@@ -394,7 +439,17 @@ export async function leerExcel(archivo, { paises, etiquetas, paisFijo = null })
     } else vistos.set(clave, f.fila)
   }
 
-  return { filas, advertencias }
+  // N.º repetidos
+  const porNumero = new Map()
+  for (const f of filas) {
+    if (f.numero == null) continue
+    const previa = porNumero.get(f.numero)
+    if (previa) {
+      f.erroresNumero.push(`El N.º ${f.numero} ya se usó en la fila ${previa}.`)
+    } else porNumero.set(f.numero, f.fila)
+  }
+
+  return { filas, advertencias, tieneNumero: tiene('numero') }
 }
 
 export function descargarArchivo(blob, nombre) {

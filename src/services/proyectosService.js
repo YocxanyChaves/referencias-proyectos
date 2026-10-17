@@ -99,14 +99,68 @@ export async function crearProyecto(datos, evidencias, onProgreso = () => {}) {
   return id
 }
 
-// Importación masiva: todos los proyectos en una sola transacción (función crear_proyectos).
-// Si uno falla no se guarda ninguno, y el error indica la fila del Excel ("Fila 7: …").
-// filas: [{ fila, datos }] con `datos` en la forma del formulario.
-export async function crearProyectos(filas) {
+const SUBIDAS_SIMULTANEAS = 3
+
+// Importación masiva con evidencias.
+// 1. Todos los proyectos se crean en una sola transacción (función crear_proyectos);
+//    si uno falla no se guarda ninguno y el error indica la fila del Excel ("Fila 7: …").
+// 2. Se suben las evidencias de cada proyecto. Si una falla, se borran los archivos ya
+//    subidos y todos los proyectos creados, para no dejar proyectos sin evidencias.
+// filas: [{ fila, numero, datos }]; evidenciasPorNumero: { [numero]: evidencia[] }.
+// onProgreso(texto, hechas, total)
+export async function importarProyectos(filas, evidenciasPorNumero, onProgreso = () => {}) {
+  const tareas = []
+  onProgreso('Creando proyectos…', 0, 0)
   const ids = unwrap(
     await supabase.rpc('crear_proyectos', {
       p_proyectos: filas.map(({ fila, datos }) => ({ fila, ...aCamposProyecto(datos) })),
     }),
   )
-  return ids.length
+  filas.forEach((f, i) => {
+    for (const evidencia of evidenciasPorNumero[f.numero] ?? [])
+      tareas.push({ proyectoId: ids[i], evidencia })
+  })
+
+  const rutasSubidas = []
+  let siguiente = 0
+  let hechas = 0
+  let fallo = null
+  async function trabajador() {
+    while (!fallo && siguiente < tareas.length) {
+      const { proyectoId, evidencia } = tareas[siguiente++]
+      try {
+        const { ruta_archivo } = await subirEvidencia(proyectoId, evidencia)
+        rutasSubidas.push(ruta_archivo)
+        hechas++
+        onProgreso(`Subiendo evidencias: ${evidencia.archivo.name}`, hechas, tareas.length)
+      } catch (e) {
+        fallo ??= new Error(`No se pudo subir "${evidencia.archivo.name}": ${e.message}`)
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: SUBIDAS_SIMULTANEAS }, trabajador))
+
+  if (fallo) {
+    onProgreso('Error; deshaciendo la importación…', hechas, tareas.length)
+    // Archivos primero: el permiso de borrado depende del país del proyecto.
+    for (let i = 0; i < rutasSubidas.length; i += 50) {
+      await eliminarArchivos(rutasSubidas.slice(i, i + 50)).catch(() => {})
+    }
+    let error = null
+    for (let i = 0; i < ids.length && !error; i += 100) {
+      ;({ error } = await supabase
+        .from('proyectos')
+        .delete()
+        .in('id', ids.slice(i, i + 100)))
+    }
+    if (error) {
+      throw new Error(
+        `${fallo.message} Además no se pudieron borrar los proyectos creados (${error.message}); ` +
+          'avisa a un administrador.',
+      )
+    }
+    throw fallo
+  }
+
+  return { proyectos: ids.length, evidencias: tareas.length }
 }

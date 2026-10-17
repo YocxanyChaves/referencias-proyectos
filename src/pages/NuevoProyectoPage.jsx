@@ -48,7 +48,7 @@ export default function NuevoProyectoPage() {
   const [error, setError] = useState(null)
   const [leyendoExcel, setLeyendoExcel] = useState(false)
   const [estadoExcel, setEstadoExcel] = useState(null) // { error, aviso, pendientes }
-  const [importacion, setImportacion] = useState(null) // { nombreArchivo, filas, advertencias }
+  const [importacion, setImportacion] = useState(null) // { nombreArchivo, filas, advertencias, tieneNumero }
   const paisFijo = esAdmin ? null : perfil.paisId
 
   useEffect(() => {
@@ -69,7 +69,7 @@ export default function NuevoProyectoPage() {
     setLeyendoExcel(true)
     setEstadoExcel(null)
     try {
-      const { filas, advertencias } = await leerExcel(archivo, { paises, etiquetas, paisFijo })
+      const { filas, advertencias, tieneNumero } = await leerExcel(archivo, { paises, etiquetas, paisFijo })
       if (filas.length === 0) {
         setImportacion(null)
         setEstadoExcel({
@@ -85,7 +85,7 @@ export default function NuevoProyectoPage() {
           pendientes: fila.errores,
         })
       } else {
-        setImportacion({ nombreArchivo: archivo.name, filas, advertencias })
+        setImportacion({ nombreArchivo: archivo.name, filas, advertencias, tieneNumero })
       }
     } catch (e) {
       setImportacion(null)
@@ -135,6 +135,8 @@ export default function NuevoProyectoPage() {
       return 'Indica la fecha de fin de un proyecto finalizado.'
     if (datos.etiquetas.length === 0) return 'Asigna al menos una etiqueta.'
     if (datos.monto !== '' && !(Number(datos.monto) >= 0)) return 'El monto debe ser un número positivo.'
+    if (evidencias.length === 0)
+      return 'Adjunta al menos una evidencia. No se aceptan proyectos sin evidencias.'
     const grande = evidencias.find((ev) => ev.archivo.size > TAMANO_MAXIMO_BYTES)
     if (grande) return `"${grande.archivo.name}" supera el máximo de 50 MB.`
     return null
@@ -266,10 +268,11 @@ export default function NuevoProyectoPage() {
         </section>
 
         <section className="tarjeta">
-          <h2>Evidencias</h2>
+          <h2>Evidencias *</h2>
           <p className="ayuda">
-            Máximo 50 MB por archivo. Desmarca “Compartible” para documentos de uso interno (p. ej. contratos
-            con precios): no serán visibles para el rol consulta ni se exportarán.
+            Al menos una. Cualquier tipo de archivo, máximo 50 MB cada uno. Desmarca “Compartible” para
+            documentos de uso interno (p. ej. contratos con precios): no serán visibles para el rol consulta
+            ni se exportarán.
           </p>
           <input type="file" multiple onChange={agregarArchivos} />
 

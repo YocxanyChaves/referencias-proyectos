@@ -137,6 +137,44 @@ button.chip { cursor: pointer; }
 .tabla tr.con-error td { background: #fdf3f2; }
 .tabla tr.con-error td:first-child { box-shadow: inset 3px 0 0 var(--error); }
 .errores { margin: 0; padding-left: 1rem; color: var(--error); }
+
+/* Pasos de la importación */
+.paso { display: flex; flex-direction: column; gap: .75rem; }
+.paso h2 { margin: 0; }
+.paso-cabecera { display: flex; align-items: center; gap: .6rem; }
+.paso-numero {
+  display: inline-grid; place-items: center; width: 1.8rem; height: 1.8rem; border-radius: 50%;
+  font-weight: 700; font-size: .9rem; background: var(--fondo); color: var(--suave); border: 1px solid var(--borde);
+}
+.paso-ok { border-color: var(--exito); }
+.paso-ok .paso-numero { background: var(--exito); border-color: var(--exito); color: #fff; }
+.paso-error { border-color: var(--error); }
+.paso-error .paso-numero { background: var(--error); border-color: var(--error); color: #fff; }
+.paso p { margin: 0; }
+.guia-carpeta { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; align-items: center; }
+.ejemplo-carpeta {
+  margin: 0; padding: .6rem .9rem; background: var(--fondo); border: 1px solid var(--borde); border-radius: 6px;
+  font-family: Consolas, ui-monospace, monospace; font-size: .82rem; color: var(--primario);
+}
+.soltar-carpeta { padding: 1.25rem 1rem; }
+.errores-carpeta {
+  margin: 0; padding: .6rem .9rem .6rem 1.8rem; background: #fdecea; color: var(--error); border-radius: 6px;
+  display: flex; flex-direction: column; gap: .3rem; font-size: .9rem;
+}
+.celda-evidencias { min-width: 150px; }
+.celda-evidencias summary { cursor: pointer; color: var(--primario); white-space: nowrap; }
+.lista-evidencias { list-style: none; margin: .5rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .4rem; min-width: 460px; }
+.lista-evidencias li { display: grid; grid-template-columns: minmax(0, 1fr) 160px auto; gap: .5rem; align-items: center; }
+.lista-evidencias select { padding: .25rem .4rem; font-size: .85rem; }
+.evidencia-nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.progreso-importacion { display: flex; flex-direction: column; gap: .35rem; color: var(--primario); font-size: .9rem; }
+.progreso-importacion progress { width: 100%; height: 10px; accent-color: var(--primario); }
+.derecha { text-align: right; }
+@media (max-width: 700px) {
+  .guia-carpeta { grid-template-columns: 1fr; }
+  .lista-evidencias { min-width: 0; }
+  .lista-evidencias li { grid-template-columns: 1fr; }
+}
 .ok-texto { color: var(--exito); font-weight: 500; }
 
 @media (max-width: 960px) {

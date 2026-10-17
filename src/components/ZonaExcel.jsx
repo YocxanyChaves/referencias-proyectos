@@ -14,8 +14,8 @@ export default function ZonaExcel({ onArchivo, onDescargarPlantilla, ocupado, le
     <aside className="tarjeta zona-excel" aria-labelledby="titulo-excel">
       <h2 id="titulo-excel">Cargar desde Excel</h2>
       <p className="ayuda">
-        Llena la plantilla y súbela aquí. Con un proyecto se llena este formulario; con varios, se importan
-        todos de una vez.
+        Llena la plantilla y súbela aquí. Con un proyecto se llena este formulario; con varios, después se
+        pide la carpeta de evidencias (1.1, 1.2, 2.1…) y se importan todos de una vez.
       </p>
 
       <div
