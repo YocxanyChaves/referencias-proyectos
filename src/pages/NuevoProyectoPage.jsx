@@ -4,6 +4,7 @@ import ImportacionMasiva from '../components/ImportacionMasiva'
 import SelectorEtiquetas from '../components/SelectorEtiquetas'
 import ZonaExcel from '../components/ZonaExcel'
 import { useAuth } from '../context/AuthContext'
+import { separarPaquete } from '../lib/evidenciasCarpeta'
 import { descargarArchivo, generarPlantilla, leerExcel } from '../lib/excelProyectos'
 import {
   ESTADOS_PROYECTO,
@@ -47,8 +48,9 @@ export default function NuevoProyectoPage() {
   const [progreso, setProgreso] = useState(null)
   const [error, setError] = useState(null)
   const [leyendoExcel, setLeyendoExcel] = useState(false)
-  const [estadoExcel, setEstadoExcel] = useState(null) // { error, aviso, pendientes }
-  const [importacion, setImportacion] = useState(null) // { nombreArchivo, filas, advertencias, tieneNumero }
+  const [estadoExcel, setEstadoExcel] = useState(null) // { error, errores, aviso, pendientes }
+  // { id, nombreArchivo, nombreCarpeta, evidenciasIniciales, filas, advertencias, tieneNumero }
+  const [importacion, setImportacion] = useState(null)
   const paisFijo = esAdmin ? null : perfil.paisId
 
   useEffect(() => {
@@ -75,6 +77,9 @@ export default function NuevoProyectoPage() {
         setEstadoExcel({
           error: 'El archivo no tiene proyectos. Llena al menos una fila debajo de los encabezados.',
         })
+      } else if (importacion) {
+        // Se reemplazó el Excel desde la revisión: se conservan las evidencias ya cargadas.
+        setImportacion((i) => ({ ...i, nombreArchivo: archivo.name, filas, advertencias, tieneNumero }))
       } else if (filas.length === 1) {
         // Un solo proyecto: se llena el formulario para revisarlo y adjuntar evidencias.
         const [fila] = filas
@@ -85,10 +90,47 @@ export default function NuevoProyectoPage() {
           pendientes: fila.errores,
         })
       } else {
-        setImportacion({ nombreArchivo: archivo.name, filas, advertencias, tieneNumero })
+        setImportacion({ id: Date.now(), nombreArchivo: archivo.name, filas, advertencias, tieneNumero })
       }
     } catch (e) {
       setImportacion(null)
+      setEstadoExcel({ error: e.message })
+    } finally {
+      setLeyendoExcel(false)
+    }
+  }
+
+  // Carpeta de carga completa: el Excel de proyectos + la carpeta "Evidencias".
+  async function cargarPaquete(items) {
+    setLeyendoExcel(true)
+    setEstadoExcel(null)
+    try {
+      const paquete = separarPaquete(items)
+      if (paquete.errores.length) {
+        setEstadoExcel({ error: 'La carpeta no tiene la estructura esperada:', errores: paquete.errores })
+        return
+      }
+      const { filas, advertencias, tieneNumero } = await leerExcel(paquete.excel, {
+        paises,
+        etiquetas,
+        paisFijo,
+      })
+      if (filas.length === 0) {
+        setEstadoExcel({
+          error: `El Excel "${paquete.excel.name}" no tiene proyectos. Llena al menos una fila debajo de los encabezados.`,
+        })
+        return
+      }
+      setImportacion({
+        id: Date.now(),
+        nombreArchivo: paquete.excel.name,
+        nombreCarpeta: paquete.nombreCarpeta,
+        evidenciasIniciales: paquete.evidencias,
+        filas,
+        advertencias: [...paquete.advertencias, ...advertencias],
+        tieneNumero,
+      })
+    } catch (e) {
       setEstadoExcel({ error: e.message })
     } finally {
       setLeyendoExcel(false)
@@ -164,6 +206,7 @@ export default function NuevoProyectoPage() {
   if (importacion) {
     return (
       <ImportacionMasiva
+        key={importacion.id}
         {...importacion}
         onCancelar={() => setImportacion(null)}
         onCargarOtro={cargarExcel}
@@ -336,6 +379,7 @@ export default function NuevoProyectoPage() {
       </form>
       <ZonaExcel
         onArchivo={cargarExcel}
+        onPaquete={cargarPaquete}
         onDescargarPlantilla={bajarPlantilla}
         ocupado={leyendoExcel || guardando || etiquetas.length === 0}
         leyendo={leyendoExcel}

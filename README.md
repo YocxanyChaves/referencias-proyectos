@@ -72,11 +72,20 @@ npm run dev
 
 ### Carga desde Excel
 
-En **Nuevo proyecto** hay un panel para arrastrar un `.xlsx` y un botón para descargar la plantilla (listas desplegables de país, estado y etiquetas, e instrucciones).
+En **Nuevo proyecto**, el panel de la derecha guía paso a paso: descargar la plantilla, llenarla (N.º, etiquetas marcadas con X como en la matriz de clasificación, datos obligatorios), armar la carpeta de carga y arrastrarla.
 
-- **Un proyecto** en el Excel: llena el formulario y ahí se adjuntan las evidencias.
-- **Varios proyectos**: se pide además la carpeta de evidencias. Cada archivo se nombra `<N.º>.<consecutivo> descripción.ext` (`1.1 Contrato.pdf`, `1.2 Acta.pdf`, `2.1 Informe.docx`), donde N.º es la columna del Excel. Se rechaza la carga si un archivo no sigue la guía, si hay códigos repetidos o de proyectos inexistentes, o si algún proyecto queda sin evidencias.
+```
+Carga octubre 2026/        ← se arrastra esta carpeta
+  proyectos.xlsx           ← la plantilla llena (un solo Excel)
+  Evidencias/
+    1.1 Contrato.pdf       ← N.º del proyecto . consecutivo
+    1.2 Acta.pdf
+    2.1 Informe.docx
+```
+
+- Se rechaza la carga si falta el Excel o la carpeta Evidencias, si hay más de un Excel, si hay evidencias fuera de Evidencias, si un archivo no sigue la guía, si hay códigos repetidos o de proyectos inexistentes, o si algún proyecto queda sin evidencias. Cada error dice qué corregir.
 - Los proyectos se crean en una transacción (`crear_proyectos`) y luego se suben las evidencias; si una falla, se borran archivos y proyectos.
+- Para un solo proyecto también se puede subir solo el Excel: llena el formulario y ahí se adjuntan las evidencias.
 
 **Regla: no se aceptan proyectos sin evidencias** (formulario y carga masiva). La lógica está en `src/lib/excelProyectos.js` y `src/lib/evidenciasCarpeta.js`.
 

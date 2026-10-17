@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { archivosDeArrastre, asignarEvidencias } from '../lib/evidenciasCarpeta'
+import {
+  archivosDeArrastre,
+  archivosDeSelector,
+  asignarEvidencias,
+  soloEvidencias,
+} from '../lib/evidenciasCarpeta'
 import { ESTADOS_PROYECTO, TIPOS_EVIDENCIA } from '../services/catalogosService'
 import { TAMANO_MAXIMO_BYTES } from '../services/evidenciasService'
 import { importarProyectos } from '../services/proyectosService'
@@ -35,9 +40,12 @@ function Paso({ numero, titulo, estado, children }) {
   )
 }
 
-// Revisión de una carga masiva: Excel con varios proyectos + carpeta de evidencias.
+// Revisión de una carga masiva: Excel de proyectos + carpeta de evidencias.
+// evidenciasIniciales: las que vinieron en la carpeta de carga (si se arrastró el paquete completo).
 export default function ImportacionMasiva({
   nombreArchivo,
+  nombreCarpeta,
+  evidenciasIniciales,
   filas,
   advertencias,
   tieneNumero,
@@ -47,7 +55,7 @@ export default function ImportacionMasiva({
   const navigate = useNavigate()
   const inputExcel = useRef(null)
   const inputCarpeta = useRef(null)
-  const [archivos, setArchivos] = useState(null) // archivos de la carpeta de evidencias
+  const [archivos, setArchivos] = useState(evidenciasIniciales ?? null) // archivos de la carpeta de evidencias
   const [ajustes, setAjustes] = useState({}) // cambios de tipo/compartible por evidencia
   const [leyendoCarpeta, setLeyendoCarpeta] = useState(false)
   const [encima, setEncima] = useState(false)
@@ -63,9 +71,8 @@ export default function ImportacionMasiva({
     const numeros = filas.map((f) => f.numero).filter((n) => n != null)
     return asignarEvidencias(numeros, archivos, {
       tamanoMaximo: TAMANO_MAXIMO_BYTES,
-      ignorar: [nombreArchivo],
     })
-  }, [archivos, filas, nombreArchivo])
+  }, [archivos, filas])
 
   const evidenciasDe = (numero) =>
     (asignacion?.porProyecto[numero] ?? []).map((ev) => ({ ...ev, ...ajustes[ev.clave] }))
@@ -85,7 +92,7 @@ export default function ImportacionMasiva({
     setLeyendoCarpeta(true)
     setError(null)
     try {
-      setArchivos(await obtenerArchivos())
+      setArchivos(soloEvidencias(await obtenerArchivos()))
     } catch {
       setError('No se pudo leer la carpeta. Intenta elegirla con el botón.')
     } finally {
@@ -125,7 +132,7 @@ export default function ImportacionMasiva({
       <div className="importacion-cabecera">
         <div>
           <h1>Importar proyectos</h1>
-          <p className="meta">{nombreArchivo}</p>
+          <p className="meta">{nombreCarpeta ? `${nombreCarpeta} / ${nombreArchivo}` : nombreArchivo}</p>
         </div>
         <div className="resumen">
           <span className="chip">{filas.length} proyectos</span>
@@ -256,7 +263,7 @@ export default function ImportacionMasiva({
             multiple
             hidden
             onChange={(e) => {
-              const lista = [...e.target.files]
+              const lista = archivosDeSelector(e.target.files) // se copia antes de limpiar el input
               e.target.value = ''
               if (lista.length) recibirCarpeta(async () => lista)
             }}

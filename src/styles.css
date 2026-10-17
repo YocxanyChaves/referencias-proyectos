@@ -99,12 +99,12 @@ button.chip { cursor: pointer; }
 .acciones { display: flex; justify-content: flex-end; gap: .75rem; }
 
 /* Nuevo proyecto: formulario + panel de Excel a la derecha */
-.nuevo-proyecto { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 1.5rem; align-items: start; max-width: 1160px; margin: 0 auto; }
+.nuevo-proyecto { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 1.5rem; align-items: start; max-width: 1240px; margin: 0 auto; }
 .nuevo-proyecto .formulario { max-width: none; margin: 0; }
-.zona-excel { position: sticky; top: 1rem; display: flex; flex-direction: column; gap: .75rem; margin-top: 2.6rem; }
+.zona-excel { position: relative; display: flex; flex-direction: column; gap: .75rem; margin-top: 2.6rem; }
 .zona-excel h2 { margin: 0; }
 .zona-excel .ayuda { margin: 0; }
-.zona-excel > button { width: 100%; }
+.zona-excel h2 + .ayuda { margin-top: .25rem; }
 .soltar {
   display: flex; flex-direction: column; align-items: center; gap: .3rem; text-align: center;
   padding: 1.5rem 1rem; border: 2px dashed var(--primario); border-radius: 10px;
@@ -177,8 +177,37 @@ button.chip { cursor: pointer; }
 }
 .ok-texto { color: var(--exito); font-weight: 500; }
 
-.acciones-plantilla { display: flex; flex-direction: column; align-items: stretch; gap: .25rem; }
-.acciones-plantilla .enlace { margin: 0; align-self: center; }
+.acciones-plantilla { display: flex; align-items: center; gap: .75rem; margin-top: .4rem; }
+.acciones-plantilla .enlace { margin: 0; }
+
+/* Guía paso a paso del panel de carga */
+.guia-pasos { list-style: none; counter-reset: paso; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .7rem; font-size: .9rem; }
+.guia-pasos > li { counter-increment: paso; position: relative; padding-left: 2.1rem; }
+.guia-pasos > li::before {
+  content: counter(paso); position: absolute; left: 0; top: -.05rem;
+  display: grid; place-items: center; width: 1.5rem; height: 1.5rem; border-radius: 50%;
+  background: var(--primario); color: #fff; font-weight: 700; font-size: .8rem;
+}
+.guia-pasos > li:not(:last-child)::after {
+  content: ""; position: absolute; left: .72rem; top: 1.6rem; bottom: -.65rem; width: 2px; background: var(--primario-claro);
+}
+.guia-pasos ul { margin: .3rem 0 0; padding-left: 1rem; color: var(--suave); display: flex; flex-direction: column; gap: .15rem; }
+.guia-pasos b { color: var(--primario); }
+.arbol-paquete { margin-top: .5rem; padding: .6rem .7rem; background: var(--fondo); border: 1px solid var(--borde); border-radius: 8px; }
+.arbol-carpeta { display: inline-flex; align-items: center; gap: .3rem; color: #9a6a12; font-weight: 600; font-family: system-ui, sans-serif; }
+.arbol-hijos { display: flex; flex-direction: column; gap: .15rem; margin-left: .55rem; padding-left: .7rem; border-left: 2px solid var(--borde); }
+.arbol-excel { color: #157347; font-weight: 600; }
+.arbol-excel::before { content: "▦ "; }
+.arbol-paquete .arbol-archivo { margin-left: 0; padding-left: 0; border-left: none; }
+.error-carga { background: #fdecea; color: var(--error); border-radius: 6px; padding: .6rem .9rem; font-size: .88rem; }
+.error-carga p { margin: 0 0 .3rem; font-weight: 600; }
+.error-carga ul { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: .3rem; }
+.un-proyecto { margin: 0; border-top: 1px solid var(--borde); padding-top: .7rem; }
+button.enlace.en-linea { display: inline; padding: 0; margin: 0; font-size: inherit; text-decoration: underline; }
+.ayuda-intro { margin: 0; font-size: .9rem; }
+.arbol-sub { margin-left: .7rem; }
+.arbol-xlsx { color: #157347; font-weight: 600; }
+.arbol-ev { margin-left: 1.4rem; }
 
 /* Burbuja de ayuda de la plantilla: a la izquierda del panel, apuntando al botón */
 .ayuda-plantilla {

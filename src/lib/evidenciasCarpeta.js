@@ -32,18 +32,22 @@ export function inferirTipo(nombre) {
 }
 
 // Lee los archivos de un arrastre, entrando en carpetas y subcarpetas.
+// Devuelve [{ archivo, ruta }], con la ruta relativa a lo que se arrastró ("Carga/Evidencias/1.1.pdf").
+// Debe llamarse dentro del evento: el navegador deja de dar acceso a los elementos al terminar.
 export async function archivosDeArrastre(dataTransfer) {
   const entradas = [...dataTransfer.items]
     .filter((i) => i.kind === 'file')
     .map((i) => i.webkitGetAsEntry?.())
     .filter(Boolean)
-  if (entradas.length === 0) return [...dataTransfer.files]
+  if (entradas.length === 0)
+    return [...dataTransfer.files].map((archivo) => ({ archivo, ruta: archivo.name }))
 
   const archivos = []
   async function recorrer(entrada) {
     if (archivos.length > MAX_ARCHIVOS) return
     if (entrada.isFile) {
-      archivos.push(await new Promise((ok, mal) => entrada.file(ok, mal)))
+      const archivo = await new Promise((ok, mal) => entrada.file(ok, mal))
+      archivos.push({ archivo, ruta: entrada.fullPath.replace(/^\//, '') })
     } else if (entrada.isDirectory) {
       const lector = entrada.createReader()
       // readEntries devuelve los elementos por tandas; se llama hasta que no quede nada.
@@ -56,6 +60,81 @@ export async function archivosDeArrastre(dataTransfer) {
   }
   for (const e of entradas) await recorrer(e)
   return archivos
+}
+
+// Archivos elegidos con el selector de carpetas (input con webkitdirectory).
+export function archivosDeSelector(lista) {
+  return [...lista].map((archivo) => ({ archivo, ruta: archivo.webkitRelativePath || archivo.name }))
+}
+
+const esExcel = (nombre) => /\.xlsx$/i.test(nombre)
+const carpetasDe = (ruta) => ruta.split('/').slice(0, -1)
+const estaEnEvidencias = (ruta) => carpetasDe(ruta).some((c) => normalizar(c.trim()) === 'evidencias')
+
+// De lo que se arrastró, se queda con las evidencias: lo que está dentro de una carpeta
+// "Evidencias" si existe; si no, todo menos los Excel.
+export function soloEvidencias(items) {
+  const utiles = items.filter((i) => !esArchivoDeSistema(i.archivo.name))
+  const dentro = utiles.filter((i) => estaEnEvidencias(i.ruta))
+  return (dentro.length ? dentro : utiles.filter((i) => !esExcel(i.archivo.name))).map((i) => i.archivo)
+}
+
+/**
+ * Separa una carpeta de carga en su Excel y su carpeta "Evidencias".
+ * Estructura esperada:  Carga/  proyectos.xlsx   Evidencias/  1.1 ….pdf  1.2 ….pdf  2.1 …
+ * Devuelve { excel, evidencias: File[], nombreCarpeta, errores, advertencias }.
+ */
+export function separarPaquete(items) {
+  const errores = []
+  const advertencias = []
+  const utiles = items.filter((i) => !esArchivoDeSistema(i.archivo.name))
+  const raices = [...new Set(utiles.map((i) => i.ruta.split('/')[0]))]
+  const nombreCarpeta = raices.length === 1 && utiles.some((i) => i.ruta.includes('/')) ? raices[0] : null
+
+  const evidencias = utiles.filter((i) => estaEnEvidencias(i.ruta))
+  const fuera = utiles.filter((i) => !estaEnEvidencias(i.ruta))
+  const excels = fuera.filter((i) => esExcel(i.archivo.name))
+  const otros = fuera.filter((i) => !esExcel(i.archivo.name))
+
+  if (excels.length === 0) {
+    errores.push(
+      'No se encontró el Excel de proyectos (.xlsx) en la carpeta. Guarda la plantilla llena junto a la carpeta "Evidencias", no dentro de ella.',
+    )
+  } else if (excels.length > 1) {
+    errores.push(
+      `Hay ${excels.length} archivos de Excel: ${enumerar(excels.map((i) => i.ruta))}. Deja solo la plantilla llena.`,
+    )
+  }
+
+  if (evidencias.length === 0) {
+    const pareceEvidencia = otros.filter((i) => PATRON.test(i.archivo.name))
+    errores.push(
+      pareceEvidencia.length
+        ? `Las evidencias deben ir dentro de una carpeta llamada "Evidencias". Encontré ${pareceEvidencia.length} archivos con nombre de evidencia (p. ej. "${pareceEvidencia[0].archivo.name}") fuera de esa carpeta.`
+        : 'No se encontró la carpeta "Evidencias" (o está vacía). Créala junto al Excel y pon ahí los archivos nombrados 1.1, 1.2, 2.1…',
+    )
+  } else {
+    const sueltas = otros.filter((i) => PATRON.test(i.archivo.name))
+    if (sueltas.length) {
+      errores.push(
+        `Estos archivos parecen evidencias pero están fuera de la carpeta "Evidencias": ${enumerar(sueltas.map((i) => i.ruta))}. Muévelos adentro.`,
+      )
+    }
+    const ignorados = otros.filter((i) => !PATRON.test(i.archivo.name))
+    if (ignorados.length) {
+      advertencias.push(
+        `Se ignoraron archivos que no son el Excel ni están en "Evidencias": ${enumerar(ignorados.map((i) => i.ruta))}.`,
+      )
+    }
+  }
+
+  return {
+    excel: excels.length === 1 ? excels[0].archivo : null,
+    evidencias: evidencias.map((i) => i.archivo),
+    nombreCarpeta,
+    errores,
+    advertencias,
+  }
 }
 
 function enumerar(lista, max = 8) {

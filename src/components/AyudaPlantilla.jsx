@@ -56,33 +56,24 @@ export default function AyudaPlantilla({ descargando, alturaFlecha, onCerrar }) 
       <span className="ayuda-flecha" aria-hidden="true" />
       <div className="ayuda-contenido">
         <div className="ayuda-cabecera">
-          <h3 id="ayuda-plantilla-titulo">Cómo funciona la carga desde Excel</h3>
+          <h3 id="ayuda-plantilla-titulo">Ejemplo de una carga</h3>
           <button type="button" className="ayuda-cerrar" onClick={onCerrar} aria-label="Cerrar">
             ×
           </button>
         </div>
         {descargando && <p className="ayuda-descarga">La plantilla se está descargando.</p>}
 
-        <ol className="ayuda-pasos">
-          <li>
-            <strong>Excel:</strong> una fila por proyecto con su <b>N.º</b> (1, 2, 3…). Marca con <b>X</b> sus
-            etiquetas, como en la matriz de clasificación; puedes pegarla desde la columna A.
-          </li>
-          <li>
-            <strong>Carpeta de evidencias:</strong> nombra cada archivo con el{' '}
-            <b>N.º del proyecto, un punto y un consecutivo</b>.
-          </li>
-          <li>
-            <strong>Sube</strong> el Excel a este panel y después la carpeta. Revisas y se importa todo junto.
-          </li>
-        </ol>
+        <p className="ayuda-intro">
+          El <b>N.º</b> de cada fila del Excel es el que va al inicio del nombre de sus evidencias. Así el
+          sistema sabe a qué proyecto pertenece cada archivo.
+        </p>
 
         <div
           className="ayuda-diagrama"
           aria-label="Ejemplo: el proyecto 1 tiene las evidencias 1.1 y 1.2; el proyecto 2 tiene la 2.1"
         >
           <div className="diagrama-excel">
-            <span className="diagrama-rotulo">Excel</span>
+            <span className="diagrama-rotulo">Hoja «Proyectos» del Excel</span>
             <table>
               <thead>
                 <tr>
@@ -125,18 +116,24 @@ export default function AyudaPlantilla({ descargando, alturaFlecha, onCerrar }) 
           </svg>
 
           <div className="diagrama-carpeta">
-            <span className="diagrama-rotulo">Carpeta</span>
+            <span className="diagrama-rotulo">Carpeta de la carga (es la que se arrastra)</span>
             <div className="arbol">
               <div className="arbol-raiz">
+                <IconoCarpeta /> Carga octubre 2026
+              </div>
+              <div className="arbol-archivo arbol-xlsx">
+                <IconoArchivo /> proyectos.xlsx
+              </div>
+              <div className="arbol-raiz arbol-sub">
                 <IconoCarpeta /> Evidencias
               </div>
-              <div className="arbol-archivo p1">
+              <div className="arbol-archivo arbol-ev p1">
                 <IconoArchivo /> <b>1.1</b> Contrato.pdf
               </div>
-              <div className="arbol-archivo p1">
+              <div className="arbol-archivo arbol-ev p1">
                 <IconoArchivo /> <b>1.2</b> Acta.pdf
               </div>
-              <div className="arbol-archivo p2">
+              <div className="arbol-archivo arbol-ev p2">
                 <IconoArchivo /> <b>2.1</b> Informe.docx
               </div>
             </div>
@@ -147,6 +144,7 @@ export default function AyudaPlantilla({ descargando, alturaFlecha, onCerrar }) 
           <strong>Si algo no cuadra, no se importa nada:</strong>
           <ul>
             <li>Cada proyecto necesita al menos 1 evidencia y 1 etiqueta.</li>
+            <li>El Excel va junto a la carpeta «Evidencias», no dentro de ella.</li>
             <li>Un archivo con otro nombre, un código repetido o de un N.º que no existe en el Excel.</li>
           </ul>
           <p>Cualquier tipo de archivo, hasta 50 MB. Los contratos quedan como uso interno.</p>
