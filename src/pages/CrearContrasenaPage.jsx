@@ -1,0 +1,86 @@
+import { useState } from 'react'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+
+const LONGITUD_MINIMA = 8
+
+// Pantalla a la que llegan los enlaces de invitación y de recuperación de contraseña.
+export default function CrearContrasenaPage() {
+  const { usuarioId, cargando, contrasenaPendiente, errorEnlace, crearContrasena } = useAuth()
+  const navigate = useNavigate()
+  const [password, setPassword] = useState('')
+  const [confirmacion, setConfirmacion] = useState('')
+  const [error, setError] = useState(null)
+  const [enviando, setEnviando] = useState(false)
+
+  if (cargando) return <p className="centrado">Cargando…</p>
+
+  // Sin sesión: el enlace no es válido (expiró, ya se usó o se abrió en otro navegador).
+  if (!usuarioId) {
+    return (
+      <div className="tarjeta login">
+        <h1>Crear contraseña</h1>
+        <p className="error">
+          {errorEnlace ?? 'Abre esta página desde el enlace que recibiste por correo.'}
+        </p>
+        <Link to="/login">Ir a iniciar sesión</Link>
+      </div>
+    )
+  }
+
+  if (!contrasenaPendiente) return <Navigate to="/" replace />
+
+  async function enviar(e) {
+    e.preventDefault()
+    if (password.length < LONGITUD_MINIMA) {
+      setError(`La contraseña debe tener al menos ${LONGITUD_MINIMA} caracteres.`)
+      return
+    }
+    if (password !== confirmacion) {
+      setError('Las contraseñas no coinciden.')
+      return
+    }
+    setError(null)
+    setEnviando(true)
+    try {
+      await crearContrasena(password)
+      navigate('/', { replace: true, state: { mensaje: 'Contraseña creada. ¡Bienvenido/a!' } })
+    } catch (err) {
+      setError(err.message)
+      setEnviando(false)
+    }
+  }
+
+  return (
+    <form className="tarjeta login" onSubmit={enviar}>
+      <h1>Crear contraseña</h1>
+      <p className="ayuda">Elige la contraseña con la que vas a iniciar sesión.</p>
+      <label>
+        Nueva contraseña
+        <input
+          type="password"
+          autoComplete="new-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          autoFocus
+        />
+      </label>
+      <label>
+        Confirmar contraseña
+        <input
+          type="password"
+          autoComplete="new-password"
+          value={confirmacion}
+          onChange={(e) => setConfirmacion(e.target.value)}
+          required
+        />
+      </label>
+      <p className="ayuda">Mínimo {LONGITUD_MINIMA} caracteres.</p>
+      {error && <p className="error">{error}</p>}
+      <button type="submit" disabled={enviando}>
+        {enviando ? 'Guardando…' : 'Guardar contraseña'}
+      </button>
+    </form>
+  )
+}
