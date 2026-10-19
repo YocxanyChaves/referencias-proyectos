@@ -1,6 +1,6 @@
 # Fases del proyecto
 
-Última actualización: 17 de octubre de 2026.
+Última actualización: 18 de octubre de 2026.
 
 | # | Fase | Estado | Qué incluye |
 |---|------|--------|-------------|
@@ -9,8 +9,8 @@
 | ➕ | Carga masiva por carpeta | ✅ Hecha | Plantilla Excel con matriz de etiquetas (X) y carpeta de carga con el Excel y la subcarpeta `Evidencias/` (archivos 1.1, 1.2, 2.1…). Incluye guía paso a paso y burbuja de ayuda. Se guarda todo o nada. |
 | 3 | Detalle y descargas | ✅ Hecha | Página de cada proyecto con datos, etiquetas, monto (solo quien puede verlo) y descarga de evidencias registrada en la bitácora. |
 | 4 | Edición y eliminación | ✅ Hecha | Editar datos, etiquetas, monto y evidencias (agregar, quitar, tipo, compartible) y eliminar un proyecto con confirmación. La base impide quitar la última evidencia. |
-| 5 | Administración | ⏭️ **Siguiente** | Usuarios (invitar, rol, país, desactivar), catálogos (etiquetas y países) y consulta de la bitácora de descargas. Invitar requiere una Edge Function y, para varios correos, un SMTP propio (el plan gratuito limita los envíos). |
-| 6 | Exportación de referencias | Pendiente | Elegir proyectos y generar la ficha o anexo (PDF o Excel) para una propuesta, sin montos ni evidencias internas. Cada exportación queda en la bitácora. |
+| 5 | Administración | 🧪 **En prueba** | Usuarios (invitar, rol, país, desactivar), catálogos (etiquetas y países) y consulta de la bitácora de descargas. Invitar requiere una Edge Function y, para varios correos, un SMTP propio (el plan gratuito limita los envíos). |
+| 6 | Exportación de referencias | ⏭️ **Siguiente** | Elegir proyectos y generar la ficha o anexo (PDF o Excel) para una propuesta, sin montos ni evidencias internas. Cada exportación queda en la bitácora. |
 | 7 | Producción | Pendiente | Hosting y dominio, Site URL de producción, correo propio, respaldos, monitoreo y revisión final de seguridad. |
 
 ## Reglas que no cambian

@@ -2,7 +2,13 @@ import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-const LONGITUD_MINIMA = 8
+// Mismos requisitos que la configuración de contraseñas de Supabase (Authentication → Policies).
+const REQUISITOS = [
+  { texto: 'Al menos 8 caracteres', cumple: (p) => p.length >= 8 },
+  { texto: 'Una letra minúscula', cumple: (p) => /[a-z]/.test(p) },
+  { texto: 'Una letra mayúscula', cumple: (p) => /[A-Z]/.test(p) },
+  { texto: 'Un número', cumple: (p) => /[0-9]/.test(p) },
+]
 
 // Pantalla a la que llegan los enlaces de invitación y de recuperación de contraseña.
 export default function CrearContrasenaPage() {
@@ -32,8 +38,8 @@ export default function CrearContrasenaPage() {
 
   async function enviar(e) {
     e.preventDefault()
-    if (password.length < LONGITUD_MINIMA) {
-      setError(`La contraseña debe tener al menos ${LONGITUD_MINIMA} caracteres.`)
+    if (!REQUISITOS.every((r) => r.cumple(password))) {
+      setError('La contraseña todavía no cumple todos los requisitos.')
       return
     }
     if (password !== confirmacion) {
@@ -76,7 +82,21 @@ export default function CrearContrasenaPage() {
           required
         />
       </label>
-      <p className="ayuda">Mínimo {LONGITUD_MINIMA} caracteres.</p>
+      <ul className="requisitos" aria-label="Requisitos de la contraseña">
+        {REQUISITOS.map((r) => {
+          const ok = r.cumple(password)
+          return (
+            <li key={r.texto} className={ok ? 'cumple' : undefined}>
+              <span aria-hidden="true">{ok ? '✓' : '○'}</span> {r.texto}
+              <span className="oculto">{ok ? ' (cumplido)' : ' (pendiente)'}</span>
+            </li>
+          )
+        })}
+        <li className={confirmacion && confirmacion === password ? 'cumple' : undefined}>
+          <span aria-hidden="true">{confirmacion && confirmacion === password ? '✓' : '○'}</span> Las dos
+          contraseñas coinciden
+        </li>
+      </ul>
       {error && <p className="error">{error}</p>}
       <button type="submit" disabled={enviando}>
         {enviando ? 'Guardando…' : 'Guardar contraseña'}

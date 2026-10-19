@@ -15,6 +15,7 @@ export default function Layout() {
             Proyectos
           </NavLink>
           {puedeCrear && <NavLink to="/proyectos/nuevo">Nuevo proyecto</NavLink>}
+          {rol === 'admin' && <NavLink to="/admin">Administración</NavLink>}
         </nav>
         <div className="usuario">
           <span>

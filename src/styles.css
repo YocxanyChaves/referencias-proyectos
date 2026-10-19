@@ -338,3 +338,60 @@ button.peligro { background: var(--error); border-color: var(--error); color: #f
 .zona-peligro p { margin: 0 0 .75rem; }
 .confirmar-borrado { display: flex; flex-direction: column; gap: .5rem; }
 .confirmar-borrado label { max-width: 280px; }
+
+/* Administración */
+.administracion { display: flex; flex-direction: column; gap: 1rem; max-width: 1200px; margin: 0 auto; }
+.pestanas { display: flex; gap: .25rem; border-bottom: 1px solid var(--borde); flex-wrap: wrap; }
+.pestanas a { padding: .55rem 1rem; color: var(--suave); text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.pestanas a:hover { color: var(--primario); }
+.pestanas a.active { color: var(--primario); border-bottom-color: var(--primario); font-weight: 600; }
+.admin-seccion { display: flex; flex-direction: column; gap: 1rem; }
+.admin-seccion h1, .admin-seccion p { margin: 0; }
+.buscar-admin { max-width: 280px; }
+.meta.bloque { display: block; }
+
+.invitar h2 { margin-bottom: .5rem; }
+.invitar-campos { display: grid; grid-template-columns: 1.4fr 1.2fr 150px 170px auto; gap: .75rem; align-items: end; }
+.invitar-campos label { margin: 0; }
+.invitar .ayuda { margin: .75rem 0 0; }
+.invitar .error { margin: .5rem 0 0; }
+
+.tabla-usuarios td { vertical-align: middle; }
+.tabla-usuarios td:first-child { min-width: 220px; }
+.tabla-usuarios td:first-child .meta { display: block; margin-top: .2rem; }
+.tabla-usuarios select { min-width: 140px; }
+.tabla-usuarios tr.inactivo td { background: var(--fondo); color: var(--suave); }
+.acciones-usuario { display: flex; gap: .4rem; justify-content: flex-end; flex-wrap: wrap; }
+.acciones-usuario button { padding: .35rem .7rem; font-size: .85rem; white-space: nowrap; }
+.tabla-contenedor .vacio { margin: 1rem; }
+
+.catalogos { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1rem; align-items: start; }
+.catalogo .ayuda { margin: 0 0 .5rem; }
+.catalogo-lista { list-style: none; margin: .5rem 0 0; padding: 0; }
+.catalogo-lista li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: .75rem; align-items: center; padding: .5rem 0; border-top: 1px solid var(--borde); }
+.catalogo-lista li:has(.catalogo-form) { grid-template-columns: 1fr; }
+.catalogo-nombre { overflow-wrap: anywhere; }
+.catalogo-form { display: flex; gap: .5rem; align-items: center; margin: .5rem 0; }
+.catalogo-form .codigo { width: 5rem; text-transform: uppercase; }
+.catalogo-form button { padding: .4rem .8rem; }
+.catalogo button.enlace { margin: 0; padding: 0 .2rem; }
+.catalogo button.enlace:disabled { color: var(--suave); }
+.catalogo .peligro, .catalogo .acciones-evidencia .secundario { padding: .25rem .6rem; font-size: .85rem; }
+
+.filtros-bitacora { display: grid; grid-template-columns: minmax(0, 2fr) 170px 170px auto; gap: .75rem; align-items: end; }
+.filtros-bitacora label { margin: 0; }
+
+@media (max-width: 900px) {
+  .invitar-campos, .filtros-bitacora { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .invitar-campos, .filtros-bitacora { grid-template-columns: 1fr; }
+  .catalogos { grid-template-columns: 1fr; }
+}
+
+/* Requisitos de contraseña */
+.requisitos { list-style: none; margin: 0 0 .9rem; padding: 0; display: flex; flex-direction: column; gap: .25rem; font-size: .88rem; color: var(--suave); }
+.requisitos li { transition: color .15s; }
+.requisitos li span[aria-hidden] { display: inline-block; width: 1.1rem; font-weight: 700; }
+.requisitos li.cumple { color: var(--exito); }
+.oculto { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

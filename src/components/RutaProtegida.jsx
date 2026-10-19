@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-export default function RutaProtegida({ requiereCrear = false }) {
+export default function RutaProtegida({ requiereCrear = false, requiereAdmin = false }) {
   const { usuarioId, perfil, rol, cargando, errorPerfil, puedeCrear, contrasenaPendiente, cerrarSesion } =
     useAuth()
 
@@ -25,5 +25,6 @@ export default function RutaProtegida({ requiereCrear = false }) {
   }
 
   if (requiereCrear && !puedeCrear) return <Navigate to="/" replace />
+  if (requiereAdmin && rol !== 'admin') return <Navigate to="/" replace />
   return <Outlet />
 }

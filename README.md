@@ -26,6 +26,7 @@ db/
     003_crear_proyecto.sql           proyecto + etiquetas + monto en una transacción
     004_crear_proyectos.sql          importación masiva: todos o ninguno
     005_editar_proyecto.sql          actualizar_proyecto + regla: no quitar la última evidencia
+    006_administracion.sql           editor con país, siempre un admin activo, índice de la bitácora
   supabase/                Adaptador específico de Supabase
     100_auth_y_permisos.sql
     101_funciones_privadas.sql
@@ -34,10 +35,12 @@ db/
     104_autoria_y_crear_proyecto.sql  creado_por / subido_por los fija la base de datos
     105_crear_proyectos.sql
     106_editar_proyecto.sql
+    107_administracion.sql           permisos de columnas en usuarios, un admin no se cambia a sí mismo, listar_usuarios
     functions/             Edge Functions (Deno)
       descargar-evidencia/          valida permiso, registra en descargas y entrega URL firmada (60 s)
       eliminar-archivos-evidencia/  borra archivos del almacenamiento (admin o editor del país)
       eliminar-proyecto/            borra el proyecto (permiso por RLS) y después todos sus archivos
+      invitar-usuario/              solo admin: envía la invitación por correo y asigna rol y país
 ```
 
 Los archivos de evidencias no se leen ni se borran directamente desde el navegador: pasan por las Edge Functions, que usan la llave de servicio. Así toda descarga queda registrada y la bitácora `descargas` solo la escribe el servidor.
@@ -45,7 +48,7 @@ Los archivos de evidencias no se leen ni se borran directamente desde el navegad
 ## Configuración obligatoria de Supabase (Authentication)
 
 - **Registro público desactivado** ("Allow new users to sign up" apagado). Solo un admin crea usuarios. Si se activara, cualquier persona podría crearse una cuenta: el trigger le asigna rol consulta activo y vería todos los proyectos.
-- **Requisitos de contraseña**: mínimo 8 caracteres, con letras y números (la app exige lo mismo).
+- **Requisitos de contraseña**: mínimo 8 caracteres, con minúsculas, mayúsculas y números (la app muestra la misma lista en Crear contraseña).
 - **Site URL y Redirect URLs** apuntando a la dirección de la app (necesario para invitaciones y recuperación de contraseña).
 
 Orden de ejecución: `migrations/` y luego el adaptador de la plataforma.

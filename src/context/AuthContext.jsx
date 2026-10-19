@@ -51,6 +51,8 @@ export function AuthProvider({ children }) {
     puedeCrear: rol === 'admin' || (rol === 'editor' && perfil?.paisId != null),
     // Misma regla que privado.puede_editar_proyecto; la base de datos es quien la hace cumplir.
     puedeEditarPais: (paisId) => rol === 'admin' || (rol === 'editor' && paisId === perfil?.paisId),
+    // Tras editar el propio usuario en Administración, para que el encabezado muestre lo nuevo.
+    recargarPerfil: () => usuarioId && obtenerPerfil(usuarioId).then(setPerfil),
     contrasenaPendiente,
     errorEnlace: enlace.error,
     crearContrasena: async (password) => {
