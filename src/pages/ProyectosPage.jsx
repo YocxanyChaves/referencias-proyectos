@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import SelectorEtiquetas from '../components/SelectorEtiquetas'
 import { useAuth } from '../context/AuthContext'
+import { MAX_SELECCION, agregar, quitar, useSeleccion, vaciar } from '../lib/seleccionExportacion'
 import { ESTADOS_PROYECTO, listarEtiquetas, listarPaises } from '../services/catalogosService'
 import { buscarProyectos } from '../services/proyectosService'
 
@@ -36,7 +37,10 @@ export default function ProyectosPage() {
   const [hayMas, setHayMas] = useState(false)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
+  const [avisoSeleccion, setAvisoSeleccion] = useState(null)
   const solicitud = useRef(0)
+  const seleccion = useSeleccion()
+  const seleccionados = new Set(seleccion.map((p) => p.id))
 
   useEffect(() => {
     Promise.all([listarEtiquetas(), listarPaises()])
@@ -78,6 +82,20 @@ export default function ProyectosPage() {
 
   const cambiar = (campo) => (valor) => setFiltros((f) => ({ ...f, [campo]: valor }))
   const hayFiltros = JSON.stringify(filtros) !== JSON.stringify(FILTROS_VACIOS)
+  const todosVisiblesElegidos = proyectos.length > 0 && proyectos.every((p) => seleccionados.has(p.id))
+
+  function elegir(lista) {
+    const fuera = agregar(lista)
+    setAvisoSeleccion(
+      fuera ? `Se pueden exportar hasta ${MAX_SELECCION} proyectos a la vez; ${fuera} quedaron fuera.` : null,
+    )
+  }
+
+  function alternar(p) {
+    setAvisoSeleccion(null)
+    if (seleccionados.has(p.id)) quitar([p.id])
+    else elegir([p])
+  }
 
   return (
     <div className="proyectos">
@@ -141,10 +159,46 @@ export default function ProyectosPage() {
           </div>
         )}
 
+        {(seleccion.length > 0 || proyectos.length > 0) && (
+          <div className={seleccion.length > 0 ? 'barra-seleccion activa' : 'barra-seleccion'}>
+            {proyectos.length > 0 && (
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={todosVisiblesElegidos}
+                  onChange={() => (todosVisiblesElegidos ? quitar(proyectos.map((p) => p.id)) : elegir(proyectos))}
+                />
+                Elegir {proyectos.length === 1 ? 'el que se muestra' : `los ${proyectos.length} que se muestran`}
+              </label>
+            )}
+            {seleccion.length > 0 && (
+              <>
+                <span className="barra-cuenta">
+                  {seleccion.length === 1 ? '1 elegido' : `${seleccion.length} elegidos`} para exportar
+                </span>
+                <button className="enlace" onClick={vaciar}>
+                  Quitar selección
+                </button>
+                <Link to="/exportar" className="boton">
+                  Exportar referencias
+                </Link>
+              </>
+            )}
+          </div>
+        )}
+        {avisoSeleccion && <p className="advertencia">{avisoSeleccion}</p>}
+
         <ul className="lista">
           {proyectos.map((p) => (
-            <li key={p.id} className="tarjeta proyecto">
+            <li key={p.id} className={seleccionados.has(p.id) ? 'tarjeta proyecto elegido' : 'tarjeta proyecto'}>
               <div className="proyecto-cabecera">
+                <input
+                  type="checkbox"
+                  className="elegir-proyecto"
+                  checked={seleccionados.has(p.id)}
+                  onChange={() => alternar(p)}
+                  aria-label={`Elegir "${p.titulo}" para exportar`}
+                />
                 <h3>
                   <Link to={`/proyectos/${p.id}`} className="enlace-proyecto">
                     {p.titulo}

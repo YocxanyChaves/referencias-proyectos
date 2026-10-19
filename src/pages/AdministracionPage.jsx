@@ -6,7 +6,7 @@ export default function AdministracionPage() {
       <nav className="pestanas">
         <NavLink to="usuarios">Usuarios</NavLink>
         <NavLink to="catalogos">Catálogos</NavLink>
-        <NavLink to="bitacora">Bitácora de descargas</NavLink>
+        <NavLink to="bitacora">Bitácora</NavLink>
       </nav>
       <Outlet />
     </div>

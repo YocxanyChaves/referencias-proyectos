@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listarDescargas, listarUsuarios } from '../services/adminService'
 
-const FILTROS_VACIOS = { usuarioId: '', desde: '', hasta: '' }
+const FILTROS_VACIOS = { usuarioId: '', tipo: '', desde: '', hasta: '' }
+const NOMBRE_FORMATO = { pdf: 'PDF', excel: 'Excel' }
 
 function formatearFechaHora(valor) {
   return new Date(valor).toLocaleString('es-CR', { dateStyle: 'medium', timeStyle: 'short' })
@@ -66,6 +67,14 @@ export default function BitacoraPage() {
           </select>
         </label>
         <label>
+          Tipo
+          <select value={filtros.tipo} onChange={cambiar('tipo')}>
+            <option value="">Todo</option>
+            <option value="evidencia">Descargas de evidencias</option>
+            <option value="exportacion">Exportaciones de fichas</option>
+          </select>
+        </label>
+        <label>
           Desde
           <input type="date" value={filtros.desde} onChange={cambiar('desde')} />
         </label>
@@ -81,8 +90,8 @@ export default function BitacoraPage() {
       </div>
 
       <div className="titulo-seccion">
-        <h1>Bitácora de descargas</h1>
-        {!cargando && <span className="meta">{total === 1 ? '1 descarga' : `${total} descargas`}</span>}
+        <h1>Bitácora de descargas y exportaciones</h1>
+        {!cargando && <span className="meta">{total === 1 ? '1 registro' : `${total} registros`}</span>}
       </div>
       {error && <p className="error">{error}</p>}
 
@@ -93,7 +102,7 @@ export default function BitacoraPage() {
               <th>Fecha</th>
               <th>Usuario</th>
               <th>Proyecto</th>
-              <th>Evidencia</th>
+              <th>Qué se descargó</th>
             </tr>
           </thead>
           <tbody>
@@ -111,13 +120,19 @@ export default function BitacoraPage() {
                     <span className="meta">Proyecto eliminado</span>
                   )}
                 </td>
-                <td>{d.evidencia?.nombre_original ?? <span className="meta">Evidencia eliminada</span>}</td>
+                <td>
+                  {d.tipo === 'exportacion' ? (
+                    <span className="chip">Ficha exportada · {NOMBRE_FORMATO[d.formato]}</span>
+                  ) : (
+                    (d.evidencia?.nombre_original ?? <span className="meta">Evidencia eliminada</span>)
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
         {!cargando && !error && descargas.length === 0 && (
-          <p className="vacio">{hayFiltros ? 'Ninguna descarga coincide con los filtros.' : 'Aún no hay descargas.'}</p>
+          <p className="vacio">{hayFiltros ? 'Ningún registro coincide con los filtros.' : 'Aún no hay descargas ni exportaciones.'}</p>
         )}
       </div>
 

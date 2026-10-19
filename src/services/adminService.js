@@ -45,13 +45,16 @@ export async function invitarUsuario({ email, nombre, rol, paisId }) {
   })
 }
 
-// Bitácora de descargas, de la más reciente a la más antigua.
+// Bitácora de descargas de evidencias y exportaciones de fichas, de la más reciente a la más antigua.
 // `desde` y `hasta` son fechas (AAAA-MM-DD) en hora local; `hasta` incluye todo ese día.
-export async function listarDescargas({ usuarioId = '', desde = '', hasta = '' } = {}, { pagina = 0, tamano = 50 } = {}) {
+export async function listarDescargas(
+  { usuarioId = '', tipo = '', desde = '', hasta = '' } = {},
+  { pagina = 0, tamano = 50 } = {},
+) {
   let consulta = supabase
     .from('descargas')
     .select(
-      `id, fecha,
+      `id, fecha, tipo, formato,
        usuario:usuarios(id, nombre, email),
        proyecto:proyectos(id, titulo),
        evidencia:evidencias(id, nombre_original)`,
@@ -61,6 +64,7 @@ export async function listarDescargas({ usuarioId = '', desde = '', hasta = '' }
     .range(pagina * tamano, pagina * tamano + tamano - 1)
 
   if (usuarioId) consulta = consulta.eq('usuario_id', usuarioId)
+  if (tipo) consulta = consulta.eq('tipo', tipo)
   if (desde) consulta = consulta.gte('fecha', new Date(`${desde}T00:00`).toISOString())
   if (hasta) {
     const fin = new Date(`${hasta}T00:00`)
@@ -76,6 +80,8 @@ export async function listarDescargas({ usuarioId = '', desde = '', hasta = '' }
     descargas: filas.map((d) => ({
       id: d.id,
       fecha: d.fecha,
+      tipo: d.tipo, // 'evidencia' | 'exportacion'
+      formato: d.formato, // en exportaciones: 'pdf' | 'excel'
       usuario: d.usuario,
       proyecto: d.proyecto, // null si el proyecto se eliminó
       evidencia: d.evidencia, // null si la evidencia se quitó

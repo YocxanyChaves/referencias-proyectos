@@ -7,6 +7,7 @@ import BitacoraPage from './pages/BitacoraPage'
 import CatalogosPage from './pages/CatalogosPage'
 import CrearContrasenaPage from './pages/CrearContrasenaPage'
 import EditarProyectoPage from './pages/EditarProyectoPage'
+import ExportarPage from './pages/ExportarPage'
 import LoginPage from './pages/LoginPage'
 import NuevoProyectoPage from './pages/NuevoProyectoPage'
 import ProyectoDetallePage from './pages/ProyectoDetallePage'
@@ -24,6 +25,7 @@ export default function App() {
             <Route element={<Layout />}>
               <Route index element={<ProyectosPage />} />
               <Route path="/proyectos/:id" element={<ProyectoDetallePage />} />
+              <Route path="/exportar" element={<ExportarPage />} />
               <Route element={<RutaProtegida requiereCrear />}>
                 <Route path="/proyectos/nuevo" element={<NuevoProyectoPage />} />
                 <Route path="/proyectos/:id/editar" element={<EditarProyectoPage />} />

@@ -27,6 +27,7 @@ db/
     004_crear_proyectos.sql          importación masiva: todos o ninguno
     005_editar_proyecto.sql          actualizar_proyecto + regla: no quitar la última evidencia
     006_administracion.sql           editor con país, siempre un admin activo, índice de la bitácora
+    007_exportaciones.sql            la bitácora distingue descargas de evidencias y exportaciones (pdf/excel)
   supabase/                Adaptador específico de Supabase
     100_auth_y_permisos.sql
     101_funciones_privadas.sql
@@ -40,6 +41,7 @@ db/
       descargar-evidencia/          valida permiso, registra en descargas y entrega URL firmada (60 s)
       eliminar-archivos-evidencia/  borra archivos del almacenamiento (admin o editor del país)
       eliminar-proyecto/            borra el proyecto (permiso por RLS) y después todos sus archivos
+      exportar-referencias/         registra la exportación y entrega solo lo exportable (sin montos ni evidencias internas)
       invitar-usuario/              solo admin: envía la invitación por correo y asigna rol y país
 ```
 
@@ -96,3 +98,22 @@ Carga octubre 2026/        ← se arrastra esta carpeta
 **Regla: no se aceptan proyectos sin evidencias** (formulario y carga masiva). La lógica está en `src/lib/excelProyectos.js` y `src/lib/evidenciasCarpeta.js`.
 
 Fase 1: inicio de sesión, listado y búsqueda de proyectos (por etiquetas, país, texto y fecha de fin) y creación de proyectos con etiquetas, monto y evidencias.
+
+### Exportación de referencias
+
+En la búsqueda, cada proyecto tiene una casilla para elegirlo (también se pueden elegir todos los que se muestran). La selección se recuerda durante la sesión y se ve en el menú **Exportar**, donde se ordena, se le pone título al documento y se descarga en PDF (una ficha por proyecto), Excel (una fila por proyecto) o ambos.
+
+- El navegador arma el archivo solo con lo que devuelve la Edge Function `exportar-referencias`, que nunca incluye montos ni evidencias internas; el contacto de referencia sale solo si se marca.
+- Con **Incluir los archivos de evidencias** (o con ambos formatos) se descarga un .zip:
+
+  ```
+  Propuesta X/
+    Propuesta X.pdf / .xlsx
+    Evidencias/
+      01 Nombre del proyecto/
+        1.1 Acta.pdf
+  ```
+
+  Solo van evidencias compartibles, bajadas con URLs firmadas de 10 minutos. Máximo 300 MB por paquete, porque el .zip se arma en el navegador.
+- Cada exportación queda en `descargas`: una fila por proyecto y formato (`tipo = 'exportacion'`) y una por cada evidencia incluida (`tipo = 'evidencia'`). Máximo 100 proyectos por exportación.
+- La lógica de los archivos está en `src/lib/exportarReferencias.js`.
