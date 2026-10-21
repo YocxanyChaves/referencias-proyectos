@@ -28,6 +28,7 @@ db/
     005_editar_proyecto.sql          actualizar_proyecto + regla: no quitar la última evidencia
     006_administracion.sql           editor con país, siempre un admin activo, índice de la bitácora
     007_exportaciones.sql            la bitácora distingue descargas de evidencias y exportaciones (pdf/excel)
+    008_indices_llaves_foraneas.sql  índices para las llaves foráneas de descargas, evidencias y proyectos
   supabase/                Adaptador específico de Supabase
     100_auth_y_permisos.sql
     101_funciones_privadas.sql
@@ -37,6 +38,7 @@ db/
     105_crear_proyectos.sql
     106_editar_proyecto.sql
     107_administracion.sql           permisos de columnas en usuarios, un admin no se cambia a sí mismo, listar_usuarios
+    108_politicas_rls.sql            mismos permisos, una sola política de lectura por tabla
     functions/             Edge Functions (Deno)
       descargar-evidencia/          valida permiso, registra en descargas y entrega URL firmada (60 s)
       eliminar-archivos-evidencia/  borra archivos del almacenamiento (admin o editor del país)
