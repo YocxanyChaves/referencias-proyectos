@@ -3,13 +3,7 @@ import { Link, NavLink, Outlet } from 'react-router-dom'
 import logoIcap from '../assets/icap-logo-mark.png'
 import { useAuth } from '../context/AuthContext'
 import { useSeleccion, vaciar } from '../lib/seleccionExportacion'
-
-const NOMBRES_ROL = { admin: 'Administrador', editor: 'Editor', consulta: 'Consulta' }
-
-function iniciales(nombre = '') {
-  const partes = nombre.trim().split(/\s+/).filter(Boolean)
-  return ((partes[0]?.[0] ?? '') + (partes.length > 1 ? partes.at(-1)[0] : '')).toUpperCase() || '?'
-}
+import MenuUsuario, { NOMBRES_ROL } from './MenuUsuario'
 
 // Cada enlace lleva un texto largo (escritorio) y uno corto (teléfono).
 function Enlace({ to, end, icono: Icono, largo, corto, children }) {
@@ -55,9 +49,7 @@ export default function Layout() {
           </div>
 
           <div className="usuario">
-            <span className="usuario-avatar" aria-hidden="true">
-              {iniciales(perfil.nombre)}
-            </span>
+            <MenuUsuario />
             <span className="usuario-datos">
               <strong>{perfil.nombre}</strong>
               <span>

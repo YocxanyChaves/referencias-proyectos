@@ -2,14 +2,7 @@ import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import PantallaAcceso from '../components/PantallaAcceso'
 import { useAuth } from '../context/AuthContext'
-
-// Mismos requisitos que la configuración de contraseñas de Supabase (Authentication → Policies).
-const REQUISITOS = [
-  { texto: 'Al menos 8 caracteres', cumple: (p) => p.length >= 8 },
-  { texto: 'Una letra minúscula', cumple: (p) => /[a-z]/.test(p) },
-  { texto: 'Una letra mayúscula', cumple: (p) => /[A-Z]/.test(p) },
-  { texto: 'Un número', cumple: (p) => /[0-9]/.test(p) },
-]
+import { REQUISITOS_CONTRASENA as REQUISITOS } from '../lib/contrasena'
 
 // Pantalla a la que llegan los enlaces de invitación y de recuperación de contraseña.
 export default function CrearContrasenaPage() {
