@@ -1,7 +1,8 @@
 import { Globe2 } from 'lucide-react'
 import { urlBandera } from '../lib/banderas'
 
-// Encabezado de la lista de proyectos con el filtro por país: una pastilla con la bandera de cada país.
+// Encabezado de la lista de proyectos con el filtro por país: un círculo con la bandera de cada país.
+// El seleccionado lleva un rayito de luz girando alrededor.
 export default function BandaPaises({ paises, seleccionados, onChange }) {
   function alternar(id) {
     onChange(seleccionados.includes(id) ? seleccionados.filter((x) => x !== id) : [...seleccionados, id])
@@ -19,13 +20,17 @@ export default function BandaPaises({ paises, seleccionados, onChange }) {
           type="button"
           className={seleccionados.length === 0 ? 'pais pais-todos activo' : 'pais pais-todos'}
           aria-pressed={seleccionados.length === 0}
+          aria-label="Todos los países"
+          title="Todos los países"
           onClick={() => onChange([])}
         >
-          <Globe2 aria-hidden="true" />
-          Todos
+          <span className="pais-anillo" aria-hidden="true" />
+          <span className="pais-circulo">
+            <Globe2 aria-hidden="true" />
+          </span>
         </button>
         {paises.map((p) => {
-          const url = urlBandera(p.codigo)
+          const url = urlBandera(p.codigo, { cuadrada: true })
           const activo = seleccionados.includes(p.id)
           return (
             <button
@@ -37,11 +42,14 @@ export default function BandaPaises({ paises, seleccionados, onChange }) {
               title={p.nombre}
               onClick={() => alternar(p.id)}
             >
-              {url ? (
-                <img src={url} alt="" className="bandera" draggable={false} />
-              ) : (
-                <span className="bandera-codigo">{p.codigo}</span>
-              )}
+              <span className="pais-anillo" aria-hidden="true" />
+              <span className="pais-circulo">
+                {url ? (
+                  <img src={url} alt="" draggable={false} />
+                ) : (
+                  <span className="bandera-codigo">{p.codigo}</span>
+                )}
+              </span>
             </button>
           )
         })}

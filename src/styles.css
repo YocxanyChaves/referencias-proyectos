@@ -31,7 +31,6 @@
   --pastilla-borde: #dde2e8;
   --panel-filtros: #d6e9f7;
   --panel-filtros-fin: #e4f0fa;
-  --capsula: #fff;
   --degradado-hero: linear-gradient(135deg, #003366 0%, #0b5a96 50%, #0077c8 100%);
   --sombra-tarjeta: 0 1px 2px rgba(0, 51, 102, .06), 0 10px 24px -14px rgba(0, 51, 102, .22);
   --sombra-elevada: 0 4px 8px -2px rgba(0, 51, 102, .12), 0 18px 32px -12px rgba(0, 51, 102, .24), 0 40px 64px -32px rgba(0, 51, 102, .26);
@@ -664,21 +663,31 @@ button.boton-salir:hover:not(:disabled) { background: rgba(255, 255, 255, .12); 
 .banda-titulo { animation: subir .6s var(--suave-salida) both; }
 .banda-titulo h1 { margin: 0 0 .2rem; font-size: 1.75rem; }
 .banda-titulo p { margin: 0; color: var(--suave); font-size: .88rem; }
-.banderas { display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; }
+.banderas { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; padding: 4px; }
+/* Cada país: la bandera en un círculo sobre un disco gris */
 button.pais {
-  display: inline-flex; align-items: center; justify-content: center; gap: .35rem; height: 2.1rem; min-width: 2.9rem; padding: 0 .55rem;
-  border-radius: 999px; border: 1px solid var(--pastilla-borde); background: var(--pastilla); color: var(--navy); font-size: .76rem;
+  position: relative; display: grid; place-items: center; width: 2.6rem; height: 2.6rem; padding: 0;
+  border-radius: 50%; border: 1px solid var(--pastilla-borde); background: var(--pastilla);
   box-shadow: 0 2px 6px -3px rgba(0, 51, 102, .25);
   animation: subir .5s var(--suave-salida) both;
   transition: transform .35s var(--resorte), border-color .2s, box-shadow .2s, background .2s, opacity .2s;
 }
-button.pais:hover:not(:disabled) { background: var(--pastilla-hover); border-color: var(--borde-boton); transform: translateY(-2px) scale(1.06); box-shadow: 0 6px 14px -6px rgba(0, 51, 102, .35); }
-button.pais.activo { background: var(--pastilla-hover); border-color: var(--primario); box-shadow: 0 0 0 3px rgba(0, 119, 200, .2); }
-button.pais.activo:hover:not(:disabled) { background: var(--pastilla-hover); border-color: var(--primario); }
-.pais-todos svg { width: 15px; height: 15px; color: var(--primario); }
+button.pais:hover:not(:disabled) { background: var(--pastilla-hover); border-color: var(--borde-boton); transform: translateY(-2px) scale(1.08); box-shadow: 0 6px 14px -6px rgba(0, 51, 102, .35); }
+button.pais.activo, button.pais.activo:hover:not(:disabled) { background: var(--pastilla-hover); border-color: transparent; }
+.pais-circulo { display: grid; place-items: center; width: 1.9rem; height: 1.9rem; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 1px rgba(0, 0, 0, .1); }
+.pais-circulo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pais-todos .pais-circulo { background: var(--primario); box-shadow: none; }
+.pais-todos svg { width: 16px; height: 16px; color: #fff; }
+/* Rayito de luz que da vueltas alrededor del país seleccionado (como los retratos del brochure) */
+.pais-anillo {
+  position: absolute; inset: -3px; border-radius: 50%; pointer-events: none; opacity: 0; transition: opacity .3s;
+  background: conic-gradient(from 0deg, transparent 0deg, transparent 160deg, rgba(79, 178, 242, .25) 220deg, #4fb2f2 290deg, #ffffff 320deg, #0077c8 345deg, transparent 360deg);
+  -webkit-mask-image: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+  mask-image: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+}
+.pais.activo .pais-anillo { opacity: 1; animation: girar 1.8s linear infinite; }
 .banderas.filtrando .pais:not(.activo) { opacity: .6; }
 .banderas.filtrando .pais:not(.activo):hover { opacity: 1; }
-.bandera { display: block; width: 1.3rem; height: .98rem; border-radius: 3px; object-fit: cover; box-shadow: 0 0 0 1px rgba(0, 0, 0, .08); }
 .bandera-codigo { font-family: var(--fuente-mono); font-weight: 700; font-size: .7rem; color: var(--navy); }
 .bandera-mini { width: 1.15rem; height: .86rem; border-radius: 2px; object-fit: cover; vertical-align: -2px; margin-right: .3rem; box-shadow: 0 0 0 1px rgba(0, 0, 0, .1); }
 
@@ -706,44 +715,50 @@ button.pais.activo:hover:not(:disabled) { background: var(--pastilla-hover); bor
 .filtros > button { margin-top: .25rem; }
 .filtros > :last-child { margin-bottom: 0; }
 
-/* Cápsulas de etiquetas: flacas, todas iguales, con el ícono de cada etiqueta */
+/* Cápsulas de etiquetas: azul muy oscuro con letras blancas, todas iguales, con el ícono de cada etiqueta.
+   Al pasar el mouse se ponen celestes con un halo de luz. */
 .capsulas { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); grid-auto-rows: 1fr; gap: .4rem; }
-.filtros .capsulas { grid-template-columns: 1fr; gap: .26rem; }
+.filtros .capsulas { grid-template-columns: 1fr; gap: .3rem; }
 button.capsula {
   position: relative; isolation: isolate; overflow: hidden;
-  display: flex; align-items: center; justify-content: center; gap: .4rem; padding: .16rem .75rem;
-  border-radius: 999px; font-size: .72rem; line-height: 1.25; letter-spacing: .01em;
-  color: var(--navy); background: var(--capsula); border: 1px solid var(--borde-boton);
-  box-shadow: 0 1px 3px -1px rgba(0, 51, 102, .18);
+  display: flex; align-items: center; justify-content: center; gap: .4rem; padding: .24rem .75rem;
+  border-radius: 999px; font-size: .72rem; line-height: 1.2; letter-spacing: .01em;
+  color: #fff; background: linear-gradient(180deg, #0b4277 0%, #003366 100%); border: 1px solid rgba(255, 255, 255, .1);
+  box-shadow: 0 2px 6px -3px rgba(0, 31, 61, .6);
   /* La vuelta es lenta: al barrer rápido con el mouse queda una estela. */
   transition: transform .6s var(--suave-salida), margin .6s var(--suave-salida), box-shadow .45s var(--suave-salida), background .25s, color .25s, border-color .25s;
 }
-.capsula-icono { width: 13px; height: 13px; flex: none; color: var(--primario); transition: transform .4s var(--resorte), color .25s; }
+.capsula-icono { width: 13px; height: 13px; flex: none; color: var(--celeste-suave); transition: transform .4s var(--resorte), color .25s; }
 .capsula-texto { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* Luz suave que sigue al puntero */
+/* Luz que sigue al puntero */
 button.capsula::after {
   content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity .3s;
-  background: radial-gradient(80px circle at var(--luz-x, 50%) var(--luz-y, 50%), rgba(79, 178, 242, .28), transparent 70%);
+  background: radial-gradient(90px circle at var(--luz-x, 50%) var(--luz-y, 50%), rgba(255, 255, 255, .35), transparent 70%);
 }
 button.capsula:hover:not(:disabled) {
-  z-index: 2; transform: scale(1.06); color: var(--primario); background: var(--capsula); border-color: var(--primario);
-  box-shadow: 0 8px 18px -8px rgba(0, 51, 102, .5);
+  z-index: 2; transform: scale(1.06); color: #fff; border-color: rgba(255, 255, 255, .5);
+  background: linear-gradient(135deg, #0a84d6 0%, #4fb2f2 100%);
+  box-shadow: 0 0 0 1px rgba(79, 178, 242, .35), 0 0 18px 2px rgba(79, 178, 242, .55), 0 8px 18px -8px rgba(0, 51, 102, .5);
   transition-duration: .32s; transition-timing-function: var(--resorte);
 }
 button.capsula:hover::after { opacity: 1; }
-button.capsula:hover .capsula-icono { transform: scale(1.25) rotate(-10deg); }
+button.capsula:hover .capsula-icono { color: #fff; transform: scale(1.25) rotate(-10deg); }
 button.capsula:hover + .capsula, button.capsula:has(+ .capsula:hover) { transform: scale(1.03); transition-duration: .32s; transition-timing-function: var(--resorte); }
 button.capsula:active:not(:disabled) { transform: scale(.97); transition-duration: .1s; }
-button.capsula.activa { color: #fff; background: var(--primario); border-color: var(--primario); box-shadow: 0 4px 12px -5px rgba(0, 119, 200, .7); }
+/* Seleccionada: se queda celeste, con un aro blanco para distinguirla del hover */
+button.capsula.activa, button.capsula.activa:hover:not(:disabled) {
+  color: #fff; border-color: rgba(255, 255, 255, .85);
+  background: linear-gradient(135deg, #0077c8 0%, #4fb2f2 100%);
+  box-shadow: 0 0 0 2px rgba(79, 178, 242, .45), 0 0 16px rgba(79, 178, 242, .5);
+}
 button.capsula.activa .capsula-icono { color: #fff; }
-button.capsula.activa:hover:not(:disabled) { color: #fff; background: var(--primario-oscuro); border-color: var(--primario-oscuro); }
 
-/* Efecto archivero: al pasar el mouse la etiqueta se estira hasta los bordes del panel,
-   como una carpeta que sale del cajón; la de arriba y la de abajo se asoman un poco. */
-.filtros button.capsula { margin-inline: .6rem; padding-inline: .6rem; }
-.filtros button.capsula:hover:not(:disabled) { transform: translateY(-1px); margin-inline: -1.35rem; box-shadow: 0 10px 22px -8px rgba(0, 51, 102, .55); transition-duration: .4s; }
-.filtros button.capsula:hover + .capsula, .filtros button.capsula:has(+ .capsula:hover) { transform: none; margin-inline: -.1rem; transition-duration: .4s; transition-timing-function: var(--resorte); }
-.filtros button.capsula:hover + .capsula + .capsula, .filtros button.capsula:has(+ .capsula + .capsula:hover) { transform: none; margin-inline: .5rem; transition-duration: .4s; transition-timing-function: var(--resorte); }
+/* Efecto archivero: en reposo son angostas; al pasar el mouse la etiqueta se estira hasta
+   los bordes del panel, como una carpeta que sale del cajón, y sus vecinas se asoman un poco. */
+.filtros button.capsula { margin-inline: 1.9rem; }
+.filtros button.capsula:hover:not(:disabled) { transform: translateY(-1px); margin-inline: -1.35rem; transition-duration: .42s; }
+.filtros button.capsula:hover + .capsula, .filtros button.capsula:has(+ .capsula:hover) { transform: none; margin-inline: .7rem; transition-duration: .42s; transition-timing-function: var(--resorte); }
+.filtros button.capsula:hover + .capsula + .capsula, .filtros button.capsula:has(+ .capsula + .capsula:hover) { transform: none; margin-inline: 1.4rem; transition-duration: .42s; transition-timing-function: var(--resorte); }
 .filtros button.capsula:active:not(:disabled) { transform: scale(.98); }
 
 /* Responsividad: monitores grandes, laptop, tablet y teléfono */
@@ -798,7 +813,7 @@ button.capsula.activa:hover:not(:disabled) { color: #fff; background: var(--prim
 
 @media (prefers-reduced-motion: reduce) {
   .hero-resplandor, .vaiven-rapido, .vaiven-lento, .deriva-rapida, .deriva-lenta, .hero-particula,
-  .emblema-halo, .emblema-anillo { animation: none; }
+  .emblema-halo, .emblema-anillo, .pais.activo .pais-anillo { animation: none; }
   .hero-particula { opacity: 0; }
   button.capsula, button.capsula:hover, button.capsula:hover + .capsula, button.capsula:has(+ .capsula:hover),
   button.capsula:hover + .capsula + .capsula, button.capsula:has(+ .capsula + .capsula:hover) { transform: none; }
@@ -877,7 +892,6 @@ button.capsula.activa:hover:not(:disabled) { color: #fff; background: var(--prim
   --pastilla-borde: rgba(255, 255, 255, .14);
   --panel-filtros: #0b2f52;
   --panel-filtros-fin: #0e365d;
-  --capsula: #0f3a63;
   --sombra-tarjeta: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 24px -14px rgba(0, 0, 0, .7);
   --sombra-elevada: 0 4px 8px -2px rgba(0, 0, 0, .35), 0 18px 32px -12px rgba(0, 0, 0, .6), 0 40px 64px -32px rgba(0, 0, 0, .6);
 }
@@ -887,7 +901,7 @@ button.capsula.activa:hover:not(:disabled) { color: #fff; background: var(--prim
 :root[data-tema='oscuro'] .estado.en_curso { color: var(--aviso-texto); }
 :root[data-tema='oscuro'] .arbol-carpeta, :root[data-tema='oscuro'] .arbol-raiz { color: #f0c36b; }
 :root[data-tema='oscuro'] .arbol-excel, :root[data-tema='oscuro'] .arbol-xlsx, :root[data-tema='oscuro'] .diagrama-excel td.x { color: #4ade80; }
-:root[data-tema='oscuro'] .bandera { box-shadow: 0 0 0 1px rgba(255, 255, 255, .15); }
+:root[data-tema='oscuro'] .pais-circulo { box-shadow: 0 0 0 1px rgba(255, 255, 255, .15); }
 
 /* La tarjeta del inicio de sesión se queda blanca en los dos temas */
 :root[data-tema='oscuro'] .tarjeta-acceso {
