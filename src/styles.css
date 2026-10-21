@@ -721,7 +721,7 @@ button.pais.activo, button.pais.activo:hover:not(:disabled) { background: var(--
 .filtros .capsulas { grid-template-columns: 1fr; gap: .3rem; }
 button.capsula {
   position: relative; isolation: isolate; overflow: hidden;
-  display: flex; align-items: center; justify-content: center; gap: .4rem; padding: .24rem .75rem;
+  display: flex; align-items: center; justify-content: center; gap: .4rem; padding: .4rem .75rem;
   border-radius: 999px; font-size: .72rem; line-height: 1.2; letter-spacing: .01em;
   color: #fff; background: linear-gradient(180deg, #0b4277 0%, #003366 100%); border: 1px solid rgba(255, 255, 255, .1);
   box-shadow: 0 2px 6px -3px rgba(0, 31, 61, .6);
