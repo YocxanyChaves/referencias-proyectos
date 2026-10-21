@@ -1,3 +1,4 @@
+import { ChevronDown, ShieldCheck } from 'lucide-react'
 import { useCallback, useRef, useState } from 'react'
 import { archivosDeArrastre, archivosDeSelector } from '../lib/evidenciasCarpeta'
 import AyudaPlantilla from './AyudaPlantilla'
@@ -47,89 +48,102 @@ export default function ZonaExcel({ onArchivo, onPaquete, onDescargarPlantilla, 
       <div>
         <h2 id="titulo-excel">Cargar varios proyectos con Excel</h2>
         <p className="ayuda">
-          Sigue estos pasos en orden. Si algo no cumple la guía, el sistema te dice qué corregir.
+          Si algo no cumple la guía, el sistema te dice qué corregir.
         </p>
       </div>
 
-      <ol className="guia-pasos">
-        <li>
-          <strong>Descarga la plantilla.</strong>
-          <div className="acciones-plantilla">
-            <button
-              ref={botonPlantilla}
-              type="button"
-              className="secundario"
-              data-abre-ayuda
-              onClick={() => {
-                onDescargarPlantilla()
-                abrirAyuda(true)
-              }}
-            >
-              Descargar plantilla
-            </button>
-            <button type="button" className="enlace" data-abre-ayuda onClick={() => abrirAyuda(false)}>
-              Ver ejemplo
-            </button>
-          </div>
-        </li>
-        <li>
-          <strong>Lee la hoja «Instrucciones»</strong> del Excel. Ahí se explica cada columna.
-        </li>
-        <li>
-          <strong>Llena la hoja «Proyectos»</strong>, una fila por proyecto:
-          <ul>
-            <li>
-              En <b>N.º</b> numera los proyectos: 1, 2, 3… sin repetir.
-            </li>
-            <li>
-              Marca con <b>X</b> las etiquetas de cada proyecto (al menos una). Si ya tienes la matriz de
-              clasificación, pégala desde la columna A.
-            </li>
-            <li>
-              Completa las columnas con <b>*</b>: título, cliente, país, estado y fecha de fin si está
-              finalizado.
-            </li>
-          </ul>
-        </li>
-        <li>
-          <strong>Crea una carpeta para la carga</strong> (p. ej. «Carga octubre 2026»). Guarda ahí el Excel
-          lleno y crea adentro otra carpeta llamada <b>Evidencias</b>.
-        </li>
-        <li>
-          <strong>Pon los archivos en «Evidencias»</strong> nombrados con el N.º del proyecto, un punto y un
-          consecutivo: <b>1.1</b>, <b>1.2</b> para el proyecto 1; <b>2.1</b> para el 2… Después del número
-          puedes escribir una descripción.
-          <ul>
-            <li>Cada proyecto necesita al menos una evidencia.</li>
-            <li>Cualquier tipo de archivo, hasta 50 MB cada uno.</li>
-          </ul>
-          <div className="arbol arbol-paquete" aria-label="Ejemplo de carpeta de carga">
-            <Carpeta>Carga octubre 2026</Carpeta>
-            <div className="arbol-hijos">
-              <span className="arbol-excel">proyectos.xlsx</span>
-              <Carpeta>Evidencias</Carpeta>
+      <details className="desplegable-pasos">
+        <summary>
+          <span className="desplegable-icono" aria-hidden="true">
+            <ShieldCheck />
+          </span>
+          <strong className="desplegable-texto">Pasos para una carga segura</strong>
+          <span className="desplegable-ver">
+            <span className="ver-mas">Ver más</span>
+            <span className="ver-menos">Ver menos</span>
+            <ChevronDown aria-hidden="true" />
+          </span>
+        </summary>
+        <ol className="guia-pasos">
+          <li>
+            <strong>Descarga la plantilla.</strong>
+            <div className="acciones-plantilla">
+              <button
+                ref={botonPlantilla}
+                type="button"
+                className="secundario"
+                data-abre-ayuda
+                onClick={() => {
+                  onDescargarPlantilla()
+                  abrirAyuda(true)
+                }}
+              >
+                Descargar plantilla
+              </button>
+              <button type="button" className="enlace" data-abre-ayuda onClick={() => abrirAyuda(false)}>
+                Ver ejemplo
+              </button>
+            </div>
+          </li>
+          <li>
+            <strong>Lee la hoja «Instrucciones»</strong> del Excel. Ahí se explica cada columna.
+          </li>
+          <li>
+            <strong>Llena la hoja «Proyectos»</strong>, una fila por proyecto:
+            <ul>
+              <li>
+                En <b>N.º</b> numera los proyectos: 1, 2, 3… sin repetir.
+              </li>
+              <li>
+                Marca con <b>X</b> las etiquetas de cada proyecto (al menos una). Si ya tienes la matriz de
+                clasificación, pégala desde la columna A.
+              </li>
+              <li>
+                Completa las columnas con <b>*</b>: título, cliente, país, estado y fecha de fin si está
+                finalizado.
+              </li>
+            </ul>
+          </li>
+          <li>
+            <strong>Crea una carpeta para la carga</strong> (p. ej. «Carga octubre 2026»). Guarda ahí el Excel
+            lleno y crea adentro otra carpeta llamada <b>Evidencias</b>.
+          </li>
+          <li>
+            <strong>Pon los archivos en «Evidencias»</strong> nombrados con el N.º del proyecto, un punto y un
+            consecutivo: <b>1.1</b>, <b>1.2</b> para el proyecto 1; <b>2.1</b> para el 2… Después del número
+            puedes escribir una descripción.
+            <ul>
+              <li>Cada proyecto necesita al menos una evidencia.</li>
+              <li>Cualquier tipo de archivo, hasta 50 MB cada uno.</li>
+            </ul>
+            <div className="arbol arbol-paquete" aria-label="Ejemplo de carpeta de carga">
+              <Carpeta>Carga octubre 2026</Carpeta>
               <div className="arbol-hijos">
-                <span className="arbol-archivo p1">
-                  <b>1.1</b> Contrato.pdf
-                </span>
-                <span className="arbol-archivo p1">
-                  <b>1.2</b> Acta.pdf
-                </span>
-                <span className="arbol-archivo p2">
-                  <b>2.1</b> Informe.docx
-                </span>
+                <span className="arbol-excel">proyectos.xlsx</span>
+                <Carpeta>Evidencias</Carpeta>
+                <div className="arbol-hijos">
+                  <span className="arbol-archivo p1">
+                    <b>1.1</b> Contrato.pdf
+                  </span>
+                  <span className="arbol-archivo p1">
+                    <b>1.2</b> Acta.pdf
+                  </span>
+                  <span className="arbol-archivo p2">
+                    <b>2.1</b> Informe.docx
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        </li>
-        <li>
-          <strong>Arrastra la carpeta de la carga</strong> completa al recuadro de abajo.
-        </li>
-        <li>
-          <strong>Revisa el resumen</strong>: corrige lo que salga en rojo, decide qué evidencias son
-          compartibles e importa. Se guarda todo junto o nada.
-        </li>
-      </ol>
+          </li>
+          <li>
+            <strong>Arrastra la carpeta de la carga</strong> completa al recuadro de abajo.
+          </li>
+          <li>
+            <strong>Revisa el resumen</strong>: corrige lo que salga en rojo, decide qué evidencias son
+            compartibles e importa. Se guarda todo junto o nada.
+          </li>
+        </ol>
+      </details>
 
       <div
         className={`soltar${encima ? ' encima' : ''}${ocupado ? ' ocupado' : ''}`}

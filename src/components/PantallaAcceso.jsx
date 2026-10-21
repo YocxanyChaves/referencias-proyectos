@@ -10,13 +10,9 @@ export default function PantallaAcceso({ titulo = 'Referencias de Proyectos', su
       <FondoHero />
       <div className="acceso-contenido">
         <div className="tarjeta-acceso">
-          <span className="tarjeta-franja" aria-hidden="true" />
           <img src={escudoNavy} alt="" aria-hidden="true" className="tarjeta-marca-agua" draggable={false} />
 
-          <span className="kicker">
-            <span className="kicker-punto" />
-            ICAP · Sistema interno
-          </span>
+          <span className="kicker">ICAP · Sistema interno</span>
 
           <div className="emblema">
             <span className="emblema-halo" aria-hidden="true" />
