@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import BandaPaises from '../components/BandaPaises'
 import SelectorEtiquetas from '../components/SelectorEtiquetas'
 import { useAuth } from '../context/AuthContext'
+import { urlBandera } from '../lib/banderas'
 import { MAX_SELECCION, agregar, quitar, useSeleccion, vaciar } from '../lib/seleccionExportacion'
 import { ESTADOS_PROYECTO, listarEtiquetas, listarPaises } from '../services/catalogosService'
 import { buscarProyectos } from '../services/proyectosService'
@@ -98,139 +100,141 @@ export default function ProyectosPage() {
   }
 
   return (
-    <div className="proyectos">
-      <aside className="tarjeta filtros">
-        <h2>Buscar</h2>
-        <label>
-          Texto
-          <input
-            type="search"
-            placeholder="Título, cliente o descripción"
-            value={filtros.texto}
-            onChange={(e) => cambiar('texto')(e.target.value)}
-          />
-        </label>
-
-        <fieldset>
-          <legend>Etiquetas (debe tener todas)</legend>
-          <SelectorEtiquetas
-            etiquetas={etiquetas}
-            seleccionadas={filtros.etiquetas}
-            onChange={cambiar('etiquetas')}
-          />
-        </fieldset>
-
-        <fieldset>
-          <legend>País</legend>
-          <SelectorEtiquetas etiquetas={paises} seleccionadas={filtros.paises} onChange={cambiar('paises')} />
-        </fieldset>
-
-        <fieldset>
-          <legend>Fecha de finalización</legend>
-          <div className="fila">
-            <label>
-              Desde
-              <input type="date" value={filtros.desde} onChange={(e) => cambiar('desde')(e.target.value)} />
-            </label>
-            <label>
-              Hasta
-              <input type="date" value={filtros.hasta} onChange={(e) => cambiar('hasta')(e.target.value)} />
-            </label>
-          </div>
-        </fieldset>
-
-        {hayFiltros && (
-          <button className="secundario" onClick={() => setFiltros(FILTROS_VACIOS)}>
-            Limpiar filtros
-          </button>
-        )}
-      </aside>
-
-      <section className="resultados">
-        {location.state?.mensaje && <p className="exito">{location.state.mensaje}</p>}
-        {error && <p className="error">{error}</p>}
-
-        {!cargando && !error && proyectos.length === 0 && (
-          <div className="tarjeta vacio">
-            <p>
-              {hayFiltros ? 'Ningún proyecto coincide con los filtros.' : 'Aún no hay proyectos registrados.'}
-            </p>
-            {puedeCrear && !hayFiltros && <Link to="/proyectos/nuevo">Registrar el primero</Link>}
-          </div>
-        )}
-
-        {(seleccion.length > 0 || proyectos.length > 0) && (
-          <div className={seleccion.length > 0 ? 'barra-seleccion activa' : 'barra-seleccion'}>
-            {proyectos.length > 0 && (
-              <label className="check">
-                <input
-                  type="checkbox"
-                  checked={todosVisiblesElegidos}
-                  onChange={() => (todosVisiblesElegidos ? quitar(proyectos.map((p) => p.id)) : elegir(proyectos))}
-                />
-                Elegir {proyectos.length === 1 ? 'el que se muestra' : `los ${proyectos.length} que se muestran`}
+    <>
+      <BandaPaises paises={paises} seleccionados={filtros.paises} onChange={cambiar('paises')} />
+      <div className="proyectos">
+        <aside className="filtros">
+          <h2>Buscar</h2>
+          <label>
+            Texto
+            <input
+              type="search"
+              placeholder="Título, cliente o descripción"
+              value={filtros.texto}
+              onChange={(e) => cambiar('texto')(e.target.value)}
+            />
+          </label>
+  
+          <fieldset>
+            <legend>Fecha de finalización</legend>
+            <div className="fila">
+              <label>
+                Desde
+                <input type="date" value={filtros.desde} onChange={(e) => cambiar('desde')(e.target.value)} />
               </label>
-            )}
-            {seleccion.length > 0 && (
-              <>
-                <span className="barra-cuenta">
-                  {seleccion.length === 1 ? '1 elegido' : `${seleccion.length} elegidos`} para exportar
-                </span>
-                <button className="enlace" onClick={vaciar}>
-                  Quitar selección
-                </button>
-                <Link to="/exportar" className="boton">
-                  Exportar referencias
-                </Link>
-              </>
-            )}
-          </div>
-        )}
-        {avisoSeleccion && <p className="advertencia">{avisoSeleccion}</p>}
-
-        <ul className="lista">
-          {proyectos.map((p) => (
-            <li key={p.id} className={seleccionados.has(p.id) ? 'tarjeta proyecto elegido' : 'tarjeta proyecto'}>
-              <div className="proyecto-cabecera">
-                <input
-                  type="checkbox"
-                  className="elegir-proyecto"
-                  checked={seleccionados.has(p.id)}
-                  onChange={() => alternar(p)}
-                  aria-label={`Elegir "${p.titulo}" para exportar`}
-                />
-                <h3>
-                  <Link to={`/proyectos/${p.id}`} className="enlace-proyecto">
-                    {p.titulo}
-                  </Link>
-                </h3>
-                <span className={`estado ${p.estado}`}>{NOMBRE_ESTADO[p.estado]}</span>
-              </div>
-              <p className="meta">
-                {p.cliente} · {p.pais?.nombre} · {formatearFecha(p.fechaInicio)} –{' '}
-                {formatearFecha(p.fechaFin)}
-                {p.cantidadEvidencias != null &&
-                  ` · ${p.cantidadEvidencias} ${p.cantidadEvidencias === 1 ? 'evidencia' : 'evidencias'}`}
+              <label>
+                Hasta
+                <input type="date" value={filtros.hasta} onChange={(e) => cambiar('hasta')(e.target.value)} />
+              </label>
+            </div>
+          </fieldset>
+  
+          <fieldset>
+            <legend>Etiquetas (debe tener todas)</legend>
+            <SelectorEtiquetas
+              etiquetas={etiquetas}
+              seleccionadas={filtros.etiquetas}
+              onChange={cambiar('etiquetas')}
+            />
+          </fieldset>
+  
+          {hayFiltros && (
+            <button className="secundario" onClick={() => setFiltros(FILTROS_VACIOS)}>
+              Limpiar filtros
+            </button>
+          )}
+        </aside>
+  
+        <section className="resultados">
+          {location.state?.mensaje && <p className="exito">{location.state.mensaje}</p>}
+          {error && <p className="error">{error}</p>}
+  
+          {!cargando && !error && proyectos.length === 0 && (
+            <div className="tarjeta vacio">
+              <p>
+                {hayFiltros ? 'Ningún proyecto coincide con los filtros.' : 'Aún no hay proyectos registrados.'}
               </p>
-              {p.descripcion && <p className="descripcion">{p.descripcion}</p>}
-              <div className="chips">
-                {p.etiquetas.map((e) => (
-                  <span key={e.id} className={filtros.etiquetas.includes(e.id) ? 'chip activo' : 'chip'}>
-                    {e.nombre}
+              {puedeCrear && !hayFiltros && <Link to="/proyectos/nuevo">Registrar el primero</Link>}
+            </div>
+          )}
+  
+          {(seleccion.length > 0 || proyectos.length > 0) && (
+            <div className={seleccion.length > 0 ? 'barra-seleccion activa' : 'barra-seleccion'}>
+              {proyectos.length > 0 && (
+                <label className="check">
+                  <input
+                    type="checkbox"
+                    checked={todosVisiblesElegidos}
+                    onChange={() => (todosVisiblesElegidos ? quitar(proyectos.map((p) => p.id)) : elegir(proyectos))}
+                  />
+                  Elegir {proyectos.length === 1 ? 'el que se muestra' : `los ${proyectos.length} que se muestran`}
+                </label>
+              )}
+              {seleccion.length > 0 && (
+                <>
+                  <span className="barra-cuenta">
+                    {seleccion.length === 1 ? '1 elegido' : `${seleccion.length} elegidos`} para exportar
                   </span>
-                ))}
-              </div>
-            </li>
-          ))}
-        </ul>
-
-        {cargando && <p className="centrado">Cargando…</p>}
-        {!cargando && hayMas && (
-          <button className="secundario cargar-mas" onClick={() => cargar(pagina + 1)}>
-            Cargar más
-          </button>
-        )}
-      </section>
-    </div>
+                  <button className="enlace" onClick={vaciar}>
+                    Quitar selección
+                  </button>
+                  <Link to="/exportar" className="boton">
+                    Exportar referencias
+                  </Link>
+                </>
+              )}
+            </div>
+          )}
+          {avisoSeleccion && <p className="advertencia">{avisoSeleccion}</p>}
+  
+          <ul className="lista">
+            {proyectos.map((p) => (
+              <li key={p.id} className={seleccionados.has(p.id) ? 'tarjeta proyecto elegido' : 'tarjeta proyecto'}>
+                <div className="proyecto-cabecera">
+                  <input
+                    type="checkbox"
+                    className="elegir-proyecto"
+                    checked={seleccionados.has(p.id)}
+                    onChange={() => alternar(p)}
+                    aria-label={`Elegir "${p.titulo}" para exportar`}
+                  />
+                  <h3>
+                    <Link to={`/proyectos/${p.id}`} className="enlace-proyecto">
+                      {p.titulo}
+                    </Link>
+                  </h3>
+                  <span className={`estado ${p.estado}`}>{NOMBRE_ESTADO[p.estado]}</span>
+                </div>
+                <p className="meta">
+                  {p.cliente} ·{' '}
+                  {urlBandera(p.pais?.codigo) && (
+                    <img src={urlBandera(p.pais.codigo)} alt="" className="bandera-mini" draggable={false} />
+                  )}
+                  {p.pais?.nombre} · {formatearFecha(p.fechaInicio)} –{' '}
+                  {formatearFecha(p.fechaFin)}
+                  {p.cantidadEvidencias != null &&
+                    ` · ${p.cantidadEvidencias} ${p.cantidadEvidencias === 1 ? 'evidencia' : 'evidencias'}`}
+                </p>
+                {p.descripcion && <p className="descripcion">{p.descripcion}</p>}
+                <div className="chips">
+                  {p.etiquetas.map((e) => (
+                    <span key={e.id} className={filtros.etiquetas.includes(e.id) ? 'chip activo' : 'chip'}>
+                      {e.nombre}
+                    </span>
+                  ))}
+                </div>
+              </li>
+            ))}
+          </ul>
+  
+          {cargando && <p className="centrado">Cargando…</p>}
+          {!cargando && hayMas && (
+            <button className="secundario cargar-mas" onClick={() => cargar(pagina + 1)}>
+              Cargar más
+            </button>
+          )}
+        </section>
+      </div>
+    </>
   )
 }
