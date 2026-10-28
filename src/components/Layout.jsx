@@ -1,4 +1,5 @@
 import { FileDown, FolderSearch, LogOut, PlusCircle, Settings } from 'lucide-react'
+import { Suspense } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import logoIcap from '../assets/icap-logo-mark.png'
 import { useAuth } from '../context/AuthContext'
@@ -77,7 +78,9 @@ export default function Layout() {
         </div>
       </div>
       <main className="contenido">
-        <Outlet />
+        <Suspense fallback={<p className="centrado">Cargando…</p>}>
+          <Outlet />
+        </Suspense>
       </main>
     </>
   )

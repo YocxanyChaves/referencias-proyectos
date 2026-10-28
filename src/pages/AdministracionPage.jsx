@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 
 export default function AdministracionPage() {
@@ -8,7 +9,9 @@ export default function AdministracionPage() {
         <NavLink to="catalogos">Catálogos</NavLink>
         <NavLink to="bitacora">Bitácora</NavLink>
       </nav>
-      <Outlet />
+      <Suspense fallback={<p className="centrado">Cargando…</p>}>
+        <Outlet />
+      </Suspense>
     </div>
   )
 }
