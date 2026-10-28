@@ -1,3 +1,4 @@
+import { Paperclip } from 'lucide-react'
 import { TIPOS_EVIDENCIA } from '../services/catalogosService'
 import { TAMANO_MAXIMO_BYTES } from '../services/evidenciasService'
 
@@ -40,7 +41,16 @@ export default function EvidenciasNuevas({ evidencias, setEvidencias, deshabilit
 
   return (
     <>
-      <input type="file" multiple onChange={agregar} disabled={deshabilitado} />
+      <label className={deshabilitado ? 'elegir-archivos deshabilitado' : 'elegir-archivos'}>
+        <span className="elegir-archivos-icono" aria-hidden="true">
+          <Paperclip />
+        </span>
+        <span className="elegir-archivos-texto">
+          <strong>Elegir archivos</strong>
+          <span>Puedes seleccionar varios a la vez</span>
+        </span>
+        <input type="file" multiple onChange={agregar} disabled={deshabilitado} className="oculto" />
+      </label>
       {evidencias.length > 0 && (
         <ul className="evidencias">
           {evidencias.map((ev) => (

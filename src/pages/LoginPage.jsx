@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
+import PantallaAcceso from '../components/PantallaAcceso'
 import { useAuth } from '../context/AuthContext'
 import { enviarRecuperacion, iniciarSesion } from '../services/authService'
 
@@ -40,35 +41,39 @@ export default function LoginPage() {
   }
 
   return (
-    <form className="tarjeta login" onSubmit={enviar}>
-      <h1>Referencias de Proyectos</h1>
-      {modo === 'recuperar' && (
-        <p className="ayuda">Te enviaremos un enlace para crear una contraseña nueva.</p>
-      )}
-      <label>
-        Correo electrónico
-        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
-      </label>
-      {modo === 'ingresar' && (
+    <PantallaAcceso
+      subtitulo={
+        modo === 'ingresar'
+          ? 'Inicia sesión para consultar y exportar las referencias.'
+          : 'Te enviaremos un enlace para crear una contraseña nueva.'
+      }
+    >
+      <form className="login" onSubmit={enviar}>
         <label>
-          Contraseña
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          Correo electrónico
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
         </label>
-      )}
-      {error && <p className="error">{error}</p>}
-      {aviso && <p className="exito">{aviso}</p>}
-      <button type="submit" disabled={enviando}>
-        {modo === 'ingresar'
-          ? enviando ? 'Ingresando…' : 'Ingresar'
-          : enviando ? 'Enviando…' : 'Enviar enlace'}
-      </button>
-      <button
-        type="button"
-        className="enlace"
-        onClick={() => cambiarModo(modo === 'ingresar' ? 'recuperar' : 'ingresar')}
-      >
-        {modo === 'ingresar' ? '¿Olvidaste tu contraseña?' : 'Volver a iniciar sesión'}
-      </button>
-    </form>
+        {modo === 'ingresar' && (
+          <label>
+            Contraseña
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          </label>
+        )}
+        {error && <p className="error">{error}</p>}
+        {aviso && <p className="exito">{aviso}</p>}
+        <button type="submit" disabled={enviando}>
+          {modo === 'ingresar'
+            ? enviando ? 'Ingresando…' : 'Ingresar'
+            : enviando ? 'Enviando…' : 'Enviar enlace'}
+        </button>
+        <button
+          type="button"
+          className="enlace"
+          onClick={() => cambiarModo(modo === 'ingresar' ? 'recuperar' : 'ingresar')}
+        >
+          {modo === 'ingresar' ? '¿Olvidaste tu contraseña?' : 'Volver a iniciar sesión'}
+        </button>
+      </form>
+    </PantallaAcceso>
   )
 }

@@ -1,44 +1,81 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { FileDown, FolderSearch, LogOut, PlusCircle, Settings } from 'lucide-react'
+import { Link, NavLink, Outlet } from 'react-router-dom'
+import logoIcap from '../assets/icap-logo-mark.png'
 import { useAuth } from '../context/AuthContext'
 import { useSeleccion, vaciar } from '../lib/seleccionExportacion'
+import MenuUsuario, { NOMBRES_ROL } from './MenuUsuario'
 
-const NOMBRES_ROL = { admin: 'Administrador', editor: 'Editor', consulta: 'Consulta' }
+// Cada enlace lleva un texto largo (escritorio) y uno corto (teléfono).
+function Enlace({ to, end, icono: Icono, largo, corto, children }) {
+  return (
+    <NavLink to={to} end={end}>
+      <Icono aria-hidden="true" />
+      <span className="texto-largo-nav">{largo}</span>
+      <span className="texto-corto-nav">{corto ?? largo}</span>
+      {children}
+    </NavLink>
+  )
+}
 
 export default function Layout() {
   const { perfil, rol, puedeCrear, cerrarSesion } = useAuth()
   const seleccion = useSeleccion()
 
+  const enlaces = (
+    <>
+      <Enlace to="/" end icono={FolderSearch} largo="Proyectos" />
+      <Enlace to="/exportar" icono={FileDown} largo="Exportar">
+        {seleccion.length > 0 && <span className="contador">{seleccion.length}</span>}
+      </Enlace>
+      {puedeCrear && <Enlace to="/proyectos/nuevo" icono={PlusCircle} largo="Nuevo proyecto" corto="Nuevo" />}
+      {rol === 'admin' && <Enlace to="/admin" icono={Settings} largo="Administración" corto="Admin" />}
+    </>
+  )
+
   return (
     <>
-      <header className="encabezado">
-        <strong>Referencias de Proyectos</strong>
-        <nav>
-          <NavLink to="/" end>
-            Proyectos
-          </NavLink>
-          <NavLink to="/exportar">
-            Exportar
-            {seleccion.length > 0 && <span className="contador">{seleccion.length}</span>}
-          </NavLink>
-          {puedeCrear && <NavLink to="/proyectos/nuevo">Nuevo proyecto</NavLink>}
-          {rol === 'admin' && <NavLink to="/admin">Administración</NavLink>}
-        </nav>
-        <div className="usuario">
-          <span>
-            {perfil.nombre} · {NOMBRES_ROL[rol]}
-            {perfil.paisNombre && ` · ${perfil.paisNombre}`}
-          </span>
-          <button
-            className="secundario"
-            onClick={() => {
-              vaciar() // la selección no pasa a la siguiente persona que use el navegador
-              cerrarSesion()
-            }}
-          >
-            Salir
-          </button>
+      <div className="cabecera">
+        <header className="barra">
+          <Link to="/" className="marca" title="Ir a proyectos">
+            <span className="marca-logo">
+              <img src={logoIcap} alt="Isotipo ICAP" draggable={false} />
+            </span>
+            <span className="marca-nombre">ICAP</span>
+            <span className="marca-sub">Referencias de Proyectos</span>
+          </Link>
+
+          <div className="barra-centro">
+            <nav className="segmentos">{enlaces}</nav>
+          </div>
+
+          <div className="usuario">
+            <MenuUsuario />
+            <span className="usuario-datos">
+              <strong>{perfil.nombre}</strong>
+              <span>
+                {NOMBRES_ROL[rol]}
+                {perfil.paisNombre && ` · ${perfil.paisNombre}`}
+              </span>
+            </span>
+            <button
+              className="boton-salir"
+              title="Cerrar sesión"
+              onClick={() => {
+                vaciar() // la selección no pasa a la siguiente persona que use el navegador
+                cerrarSesion()
+              }}
+            >
+              <LogOut aria-hidden="true" />
+              <span>Salir</span>
+            </button>
+          </div>
+        </header>
+
+        {/* En tablet y teléfono el menú baja a su propia fila, como en el brochure. */}
+        <div className="barra-movil">
+          <nav className="segmentos">{enlaces}</nav>
         </div>
-      </header>
+      </div>
       <main className="contenido">
         <Outlet />
       </main>
