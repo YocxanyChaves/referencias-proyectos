@@ -47,7 +47,7 @@ export async function crearContrasena(password) {
 export async function enviarRecuperacion(email) {
   unwrap(
     await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/crear-contrasena`,
+      redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}crear-contrasena`,
     }),
   )
 }

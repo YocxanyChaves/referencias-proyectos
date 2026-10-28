@@ -41,7 +41,7 @@ export async function invitarUsuario({ email, nombre, rol, paisId }) {
     nombre,
     rol,
     paisId,
-    redirectTo: `${window.location.origin}/crear-contrasena`,
+    redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}crear-contrasena`,
   })
 }
 
